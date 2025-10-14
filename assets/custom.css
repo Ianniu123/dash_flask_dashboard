@@ -1,0 +1,531 @@
+/* Custom CSS for Contract Compliance Dashboard - Matching React App Styling */
+
+/* Global Styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-system-ui, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8fafc;
+}
+
+/* Navigation Items Hover */
+.nav-item:hover {
+    background-color: #f8fafc;
+    border-radius: 6px;
+}
+
+.nav-subitem:hover {
+    background-color: #f8fafc;
+}
+
+
+/* Sidebar Toggle Button */
+.sidebar-toggle-btn:hover {
+    background-color: #f8fafc;
+}
+
+/* Sidebar transitions */
+#sidebar-container {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+#sidebar-container * {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Nav text elements - hide when sidebar is collapsed */
+#sidebar-container[style*="width: 60px"] .nav-text,
+#sidebar-container[style*="minWidth: 60px"] .nav-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+#sidebar-container[style*="width: 60px"] .request-review-submenu,
+#sidebar-container[style*="minWidth: 60px"] .request-review-submenu {
+    display: none !important;
+}
+
+/* Adjust nav items when collapsed */
+#sidebar-container[style*="width: 60px"] .nav-item,
+#sidebar-container[style*="minWidth: 60px"] .nav-item,
+#sidebar-container[style*="width: 60px"] .sidebar-toggle-btn,
+#sidebar-container[style*="minWidth: 60px"] .sidebar-toggle-btn {
+    justify-content: center;
+    padding: 10px 8px;
+}
+
+#sidebar-container[style*="width: 60px"] .nav-item > svg,
+#sidebar-container[style*="minWidth: 60px"] .nav-item > svg {
+    margin-right: 0 !important;
+}
+
+/* Hide sidebar header text when collapsed */
+#sidebar-container[style*="width: 60px"] #sidebar-text-header,
+#sidebar-container[style*="minWidth: 60px"] #sidebar-text-header {
+    display: none !important;
+}
+
+/* Smooth nav text transitions */
+.nav-text {
+    transition: opacity 0.2s ease, width 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* Collapsible term status buttons */
+.collapse-status-btn {
+    transition: all 0.2s ease;
+}
+
+.collapse-status-btn:hover {
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+}
+
+/* Scrollbar styling for term lists */
+.term-list-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.term-list-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.term-list-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.term-list-container::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Table Row Hover */
+.table-row-hover:hover {
+    background-color: #f8fafc;
+    transition: background-color 0.2s;
+}
+
+/* Icon Button Hover */
+.icon-button:hover {
+    background-color: #f8fafc;
+}
+
+/* Card Styling - Matching React Version */
+.card, .card-body, .card-header {
+    border-radius: 10px !important;
+}
+
+.card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    background-color: white;
+}
+
+.card-header {
+    background-color: white;
+    border-bottom: 1px solid #e2e8f0;
+    padding: 16px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.card-body {
+    padding: 16px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+/* Ensure all cards and containers have proper radius */
+div[class*="card"] {
+    border-radius: 10px !important;
+}
+
+/* Button Styling - Matching React Version */
+.btn, .btn-primary, .btn-outline-primary, .btn-link, .btn-secondary {
+    border-radius: 6px !important;
+}
+
+.btn-primary {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    color: white;
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+.btn-outline-primary {
+    border-color: #2563eb;
+    color: #2563eb;
+    background-color: white;
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.btn-outline-primary:hover {
+    background-color: #eff6ff;
+}
+
+.btn-link {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+.btn-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+/* Input Styling - Matching React Version */
+input.form-control, select.form-select {
+    border-radius: 6px !important;
+    border: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+input.form-control:focus, select.form-select:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Badge Styling - Matching React Version */
+.badge {
+    padding: 4px 8px;
+    border-radius: 9999px !important; /* Fully rounded like pills */
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Accordion Styling - Matching React Version */
+.accordion-button {
+    background-color: white;
+    color: #0f172a;
+    font-weight: 500;
+    border: none;
+    padding: 12px 16px;
+    transition: background-color 0.2s;
+    border-radius: 8px !important;
+}
+
+.accordion-button:hover {
+    background-color: #f8fafc;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
+
+.accordion-body {
+    padding: 16px;
+    background-color: white;
+    border-top: 1px solid #e2e8f0;
+    border-bottom-left-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+}
+
+.accordion-item {
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    margin-bottom: 8px !important;
+    overflow: hidden;
+}
+
+.accordion {
+    border: none !important;
+}
+
+/* Pagination Styling */
+.pagination {
+    margin: 0;
+}
+
+.page-link {
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    margin: 0 4px;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.page-link:hover {
+    background-color: #f8fafc;
+    color: #0f172a;
+}
+
+.page-item.active .page-link {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    color: white;
+}
+
+.page-item.disabled .page-link {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Date Picker Styling */
+.DateInput_input {
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+.SingleDatePickerInput, .DateRangePickerInput {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+}
+
+/* Chart Container */
+.js-plotly-plot {
+    border-radius: 8px;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Loading Spinner */
+._dash-loading {
+    opacity: 0.5;
+}
+
+/* Typography */
+h1 {
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: #0f172a;
+}
+
+h2 {
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: #0f172a;
+}
+
+h3 {
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: #0f172a;
+}
+
+h4 {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: #0f172a;
+}
+
+h5 {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    color: #0f172a;
+}
+
+p {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #475569;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    #sidebar-container {
+        position: fixed;
+        left: -250px;
+        z-index: 1000;
+        transition: left 0.3s;
+    }
+    
+    #sidebar-container.open {
+        left: 0;
+    }
+}
+
+/* Transitions */
+* {
+    transition-property: background-color, border-color, color;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-in-out;
+}
+
+/* Focus Visible */
+*:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+/* Link Styling */
+a {
+    color: #2563eb;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+/* Code Styling */
+code {
+    background-color: #f1f5f9;
+    color: #334155;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+}
+
+/* Table Styling */
+table {
+    font-size: 14px;
+    color: #0f172a;
+}
+
+thead th {
+    font-weight: 500;
+    color: #64748b;
+    text-transform: none;
+}
+
+tbody td {
+    vertical-align: middle;
+}
+
+/* Alert/Toast Styling */
+.alert {
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.dropdown-item {
+    padding: 8px 12px;
+    font-size: 14px;
+    color: #0f172a;
+    transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: #f8fafc;
+}
+
+/* Modal Styling */
+.modal-content {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e2e8f0;
+    padding: 16px;
+}
+
+.modal-body {
+    padding: 16px;
+}
+
+.modal-footer {
+    border-top: 1px solid #e2e8f0;
+    padding: 16px;
+}
+
+/* Utility Classes */
+.text-slate-900 { color: #0f172a; }
+.text-slate-800 { color: #1e293b; }
+.text-slate-700 { color: #334155; }
+.text-slate-600 { color: #475569; }
+.text-slate-500 { color: #64748b; }
+.text-slate-400 { color: #94a3b8; }
+
+.bg-slate-50 { background-color: #f8fafc; }
+.bg-slate-100 { background-color: #f1f5f9; }
+.bg-slate-200 { background-color: #e2e8f0; }
+
+.text-blue-600 { color: #2563eb; }
+.text-blue-700 { color: #1d4ed8; }
+.bg-blue-50 { background-color: #eff6ff; }
+.bg-blue-100 { background-color: #dbeafe; }
+
+.text-green-600 { color: #16a34a; }
+.text-green-800 { color: #166534; }
+.bg-green-100 { background-color: #dcfce7; }
+
+.text-emerald-600 { color: #10b981; }
+.text-emerald-800 { color: #065f46; }
+.bg-emerald-100 { background-color: #d1fae5; }
+
+.text-amber-800 { color: #92400e; }
+.bg-amber-100 { background-color: #fef3c7; }
+
+.text-red-800 { color: #991b1b; }
+.bg-red-100 { background-color: #fee2e2; }
+
+/* Evidence navigation button styles */
+.evidence-nav-btn:hover {
+    background-color: #2563eb !important;
+    border-color: #1d4ed8 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2) !important;
+}
+
+.evidence-nav-btn:hover .dash-iconify {
+    color: white !important;
+}
+
+.evidence-nav-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1) !important;
+}
