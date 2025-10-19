@@ -529,3 +529,8 @@ tbody td {
     transform: translateY(0);
     box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1) !important;
 }
+
+.hover-bg-slate-50:hover {
+    background-color: #f8fafc;
+    transition: background-color 0.2s;
+}

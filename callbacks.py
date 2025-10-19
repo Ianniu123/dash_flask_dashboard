@@ -2,7 +2,7 @@
 Callbacks for the Contract Compliance Dashboard
 """
 
-from dash import Input, Output, State, ALL, MATCH, ctx, callback, no_update
+from dash import Input, Output, State, ALL, MATCH, ctx, callback, no_update, html
 from dash.exceptions import PreventUpdate
 import json
 
@@ -43,6 +43,20 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
             }
         
         return new_style, new_collapsed
+    
+    # Update sidebar content visibility based on collapsed state
+    @app.callback(
+        [Output('sidebar-text-header', 'style'),
+         Output('request-review-submenu', 'style', allow_duplicate=True)],
+        [Input('sidebar-collapsed', 'data')],
+        [State('request-review-submenu', 'style')],
+        prevent_initial_call=True
+    )
+    def update_sidebar_content(is_collapsed, submenu_style):
+        """Hide/show sidebar header text and submenu when collapsed"""
+        if is_collapsed:
+            return {'display': 'none'}, {'display': 'none'}
+        return {'marginLeft': '8px'}, submenu_style
     
     # Navigation callback
     @app.callback(
@@ -150,9 +164,9 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
     
     # Combined contract selection, back button, and navigation callback
     @app.callback(
-        Output('selected-contract', 'data', allow_duplicate=True),
+        Output('selected-contract', 'data'),
         [Input({'type': 'view-contract-btn', 'index': ALL}, 'n_clicks'),
-         Input({'type': 'back-to-reviews-btn', 'index': ALL}, 'n_clicks'),
+         Input('back-to-reviews-btn', 'n_clicks'),
          Input({'type': 'nav-item', 'index': ALL}, 'n_clicks')],
         [State({'type': 'view-contract-btn', 'index': ALL}, 'id')],
         prevent_initial_call=True
@@ -165,7 +179,7 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         triggered = ctx.triggered_id
         
         # Handle back button
-        if triggered and isinstance(triggered, dict) and triggered.get('type') == 'back-to-reviews-btn':
+        if triggered == 'back-to-reviews-btn':
             return None
         
         # Handle navigation - clear selected contract
@@ -263,29 +277,30 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
          Output('evidence-data-store', 'data'),
          Output('evidence-current-index', 'data')],
         [Input({'type': 'view-evidence-btn', 'term_id': ALL, 'subpoint_idx': ALL}, 'n_clicks'),
-         Input({'type': 'evidence-nav-btn', 'direction': ALL}, 'n_clicks')],
+         Input('evidence-prev-btn', 'n_clicks'),
+         Input('evidence-next-btn', 'n_clicks')],
         [State('evidence-offcanvas', 'is_open'),
          State('evidence-data-store', 'data'),
          State('evidence-current-index', 'data')],
         prevent_initial_call=True
     )
-    def handle_evidence_offcanvas(view_clicks_list, nav_clicks, is_open, stored_data, current_index):
+    def handle_evidence_offcanvas(view_clicks_list, prev_clicks, next_clicks, is_open, stored_data, current_index):
         """Handle opening evidence offcanvas and navigation"""
         from contract_detail_view import COMPLIANCE_TERMS
         
         triggered_id = ctx.triggered_id
         
         # Handle navigation buttons
-        if triggered_id and isinstance(triggered_id, dict) and triggered_id.get('type') == 'evidence-nav-btn':
-            direction = triggered_id.get('direction')
+        if triggered_id == 'evidence-prev-btn':
             if stored_data and 'evidence' in stored_data:
                 evidence_count = len(stored_data['evidence'])
-                if direction == 'prev':
-                    new_index = (current_index - 1) % evidence_count
-                elif direction == 'next':
-                    new_index = (current_index + 1) % evidence_count
-                else:
-                    new_index = current_index
+                new_index = (current_index - 1) % evidence_count
+                return is_open, stored_data, new_index
+        
+        elif triggered_id == 'evidence-next-btn':
+            if stored_data and 'evidence' in stored_data:
+                evidence_count = len(stored_data['evidence'])
+                new_index = (current_index + 1) % evidence_count
                 return is_open, stored_data, new_index
         
         # Handle view evidence button clicks
