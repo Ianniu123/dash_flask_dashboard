@@ -7,7 +7,13 @@ import dash_bootstrap_components as dbc
 from dash_iconify import DashIconify
 
 def icon(name, **kwargs):
-    """Helper function to create DashIconify icons"""
+    """Helper function to create DashIconify icons with CSS color styling"""
+    color = kwargs.pop('color', None)
+    if color:
+        return html.Span(
+            DashIconify(icon=name, **kwargs),
+            style={'color': color}
+        )
     return DashIconify(icon=name, **kwargs)
 
 SUPPORTED_REVIEW_TYPES = [
@@ -81,6 +87,7 @@ def get_standards_layout():
     """Get the standards view layout"""
     
     active_standards = [s for s in SUPPORTED_REVIEW_TYPES if s['status'] == 'active']
+    deprecated_standards = [s for s in SUPPORTED_REVIEW_TYPES if s['status'] == 'deprecated']
     
     # Active standards table rows
     active_rows = []
@@ -122,6 +129,56 @@ def get_standards_layout():
                         style={
                             'backgroundColor': '#dcfce7',
                             'color': '#166534',
+                            'padding': '4px 8px',
+                            'borderRadius': '4px',
+                            'fontSize': '12px',
+                            'fontWeight': 500
+                        }
+                    )
+                ], style={'padding': '12px'})
+            ], style={'borderBottom': '1px solid #e2e8f0'}, className='table-row-hover')
+        )
+    
+    # Deprecated standards table rows
+    deprecated_rows = []
+    for standard in deprecated_standards:
+        deprecated_rows.append(
+            html.Tr([
+                html.Td([
+                    html.Code(
+                        standard['typeId'],
+                        style={
+                            'fontSize': '12px',
+                            'backgroundColor': '#f1f5f9',
+                            'padding': '4px 8px',
+                            'borderRadius': '4px',
+                            'color': '#94a3b8'
+                        }
+                    )
+                ], style={'padding': '12px'}),
+                html.Td(standard['typeName'], style={'padding': '12px', 'color': '#64748b'}),
+                html.Td(standard['publishedDate'], style={'padding': '12px', 'color': '#64748b'}),
+                html.Td(standard['author'], style={'padding': '12px', 'color': '#64748b'}),
+                html.Td([
+                    html.Span(
+                        standard['typeVersionId'],
+                        style={
+                            'backgroundColor': 'white',
+                            'color': '#64748b',
+                            'border': '1px solid #e2e8f0',
+                            'padding': '4px 8px',
+                            'borderRadius': '4px',
+                            'fontSize': '12px'
+                        }
+                    )
+                ], style={'padding': '12px'}),
+                html.Td([
+                    html.Span(
+                        "Deprecated",
+                        style={
+                            'backgroundColor': '#ffedd5',
+                            'color': '#9a3412',
+                            'border': '1px solid #fed7aa',
                             'padding': '4px 8px',
                             'borderRadius': '4px',
                             'fontSize': '12px',
@@ -193,5 +250,57 @@ def get_standards_layout():
                 ], style={'border': '1px solid #e2e8f0', 'borderRadius': '8px', 'overflow': 'hidden'})
             ], style={'padding': '16px'})
         ], style={'marginBottom': '24px'}),
-    
+        
+        # Deprecated Standards
+        dbc.Card([
+            dbc.CardHeader([
+                html.H5("Deprecated Review Types", style={'margin': 0}),
+                html.P(f"Previous versions no longer recommended for new reviews ({len(deprecated_standards)})",
+                       style={'fontSize': '14px', 'color': '#64748b', 'margin': '8px 0 0 0'})
+            ]),
+            dbc.CardBody([
+                html.Div([
+                    html.Table([
+                        html.Thead([
+                            html.Tr([
+                                html.Th("Type ID", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'}),
+                                html.Th("Type Name", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'}),
+                                html.Th("Published Date", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'}),
+                                html.Th("Author", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'}),
+                                html.Th("Version", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'}),
+                                html.Th("Status", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'})
+                            ])
+                        ]),
+                        html.Tbody(deprecated_rows)
+                    ], style={'width': '100%', 'borderCollapse': 'collapse', 'fontSize': '14px'})
+                ], style={'border': '1px solid #e2e8f0', 'borderRadius': '8px', 'overflow': 'hidden'})
+            ], style={'padding': '16px'})
+        ], style={'marginBottom': '24px'}),
+        
+        # Summary
+        dbc.Card([
+            dbc.CardBody([
+                html.Div([
+                    html.Div(
+                        style={
+                            'width': '4px',
+                            'height': '48px',
+                            'backgroundColor': '#94a3b8',
+                            'borderRadius': '9999px',
+                            'marginRight': '12px'
+                        }
+                    ),
+                    html.Div([
+                        html.P([
+                            html.Span(f"{len(active_standards)}", style={'fontWeight': 500}),
+                            " active review types available"
+                        ], style={'fontSize': '14px', 'color': '#334155', 'margin': '0 0 4px 0'}),
+                        html.P(
+                            "Contact your administrator to request new compliance standards or update existing versions.",
+                            style={'fontSize': '12px', 'color': '#475569', 'margin': 0}
+                        )
+                    ])
+                ], style={'display': 'flex', 'alignItems': 'start'})
+            ])
+        ], style={'background': 'linear-gradient(to bottom right, #f8fafc, #f1f5f9)', 'border': '1px solid #e2e8f0'})
     ])

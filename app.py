@@ -3,8 +3,16 @@ Contract Compliance Dashboard - Python Dash Application
 Converted from React/TypeScript to Python using Dash, Dash Mantine Components, and Dash Bootstrap Components
 """
 
-from dash import Dash, html, dcc
+import dash
+from dash import Dash, html, dcc, Input, Output, State, ALL, MATCH, ctx, callback
 import dash_bootstrap_components as dbc
+import dash_mantine_components as dmc
+from dash_iconify import DashIconify
+import plotly.graph_objects as go
+import plotly.express as px
+from datetime import datetime, timedelta
+import pandas as pd
+import json
 
 # Initialize the Dash app
 app = Dash(

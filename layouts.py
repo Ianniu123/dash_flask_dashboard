@@ -9,7 +9,13 @@ from dash_iconify import DashIconify
 import plotly.graph_objects as go
 
 def icon(name, **kwargs):
-    """Helper function to create DashIconify icons"""
+    """Helper function to create DashIconify icons with CSS color styling"""
+    color = kwargs.pop('color', None)
+    if color:
+        return html.Span(
+            DashIconify(icon=name, **kwargs),
+            style={'color': color}
+        )
     return DashIconify(icon=name, **kwargs)
 
 def create_sidebar():
@@ -19,7 +25,7 @@ def create_sidebar():
         html.Div([
             html.Div([
                 html.Div(
-                    icon("mdi:file-document", width=20, color='white'),
+                    icon("mdi:file-document", width=20, color='#ffffff'),
                     style={
                         'width': '32px',
                         'height': '32px',
@@ -58,9 +64,7 @@ def create_sidebar():
                     'alignItems': 'center',
                     'fontSize': '14px',
                     'color': '#0f172a',
-                    'transition': 'background-color 0.2s',
-                    'borderRadius': '6px',
-                    'margin': '0 8px'
+                    'transition': 'background-color 0.2s'
                 },
                 className='nav-item'
             ),
@@ -79,9 +83,7 @@ def create_sidebar():
                     'alignItems': 'center',
                     'fontSize': '14px',
                     'color': '#0f172a',
-                    'transition': 'background-color 0.2s',
-                    'borderRadius': '6px',
-                    'margin': '0 8px'
+                    'transition': 'background-color 0.2s'
                 },
                 className='nav-item'
             ),
@@ -100,10 +102,7 @@ def create_sidebar():
                     'alignItems': 'center',
                     'fontSize': '14px',
                     'color': '#0f172a',
-                    'transition': 'background-color 0.2s',
-                    'borderRadius': '6px',
-                    'margin': '0 8px'
-
+                    'transition': 'background-color 0.2s'
                 },
                 className='nav-item'
             ),
@@ -124,9 +123,7 @@ def create_sidebar():
                         'alignItems': 'center',
                         'fontSize': '14px',
                         'color': '#0f172a',
-                        'transition': 'background-color 0.2s',
-                        'borderRadius': '6px',
-                        'margin': '0 8px'
+                        'transition': 'background-color 0.2s'
                     },
                     className='nav-item'
                 ),
@@ -212,90 +209,91 @@ def create_header():
                     },
                     className='icon-button'
                 ),
-                # # Separator
-                # html.Div(
-                #     style={
-                #         'width': '1px',
-                #         'height': '24px',
-                #         'backgroundColor': '#e2e8f0',
-                #         'marginRight': '12px'
-                #     }
-                # ),
-                # html.Div(
-                #     id='search-container',
-                #     children=[
-                #         html.Div([
-                #             icon("mdi:magnify", width=16, style={
-                #                 'position': 'absolute',
-                #                 'left': '12px',
-                #                 'top': '50%',
-                #                 'transform': 'translateY(-50%)',
-                #                 'color': '#94a3b8'
-                #             }),
-                #             dbc.Input(
-                #                 placeholder="Search contracts...",
-                #                 style={
-                #                     'paddingLeft': '36px',
-                #                     'width': '256px',
-                #                     'backgroundColor': '#f8fafc',
-                #                     'border': '1px solid #e2e8f0',
-                #                     'borderRadius': '6px'
-                #                 }
-                #             )
-                #         ], style={'position': 'relative'})
-                #     ],
-                #     style={'display': 'none'}  # Hidden by default, shown conditionally
-                # )
-            ])#, style={'display': 'flex', 'alignItems': 'center'}),
+                # Separator
+                html.Div(
+                    style={
+                        'width': '1px',
+                        'height': '24px',
+                        'backgroundColor': '#e2e8f0',
+                        'marginRight': '12px'
+                    }
+                ),
+                html.Div(
+                    id='search-container',
+                    children=[
+                        html.Div([
+                            icon("mdi:magnify", width=16, style={
+                                'position': 'absolute',
+                                'left': '12px',
+                                'top': '50%',
+                                'transform': 'translateY(-50%)',
+                                'color': '#94a3b8'
+                            }),
+                            dbc.Input(
+                                placeholder="Search contracts...",
+                                style={
+                                    'paddingLeft': '36px',
+                                    'width': '256px',
+                                    'backgroundColor': '#f8fafc',
+                                    'border': '1px solid #e2e8f0',
+                                    'borderRadius': '6px'
+                                }
+                            )
+                        ], style={'position': 'relative'})
+                    ],
+                    style={'display': 'none'}  # Hidden by default, shown conditionally
+                )
+            ], style={'display': 'flex', 'alignItems': 'center'}),
             
-            # # Right side - icons
-            # html.Div([
-            #     html.Div(
-            #         icon("mdi:bell", width=20, color='#475569'),
-            #         style={
-            #             'width': '36px',
-            #             'height': '36px',
-            #             'display': 'flex',
-            #             'alignItems': 'center',
-            #             'justifyContent': 'center',
-            #             'cursor': 'pointer',
-            #             'borderRadius': '6px',
-            #             'transition': 'background-color 0.2s'
-            #         },
-            #         className='icon-button'
-            #     ),
-            #     html.Div(
-            #         icon("mdi:cog", width=20, color='#475569'),
-            #         style={
-            #             'width': '36px',
-            #             'height': '36px',
-            #             'display': 'flex',
-            #             'alignItems': 'center',
-            #             'justifyContent': 'center',
-            #             'cursor': 'pointer',
-            #             'borderRadius': '6px',
-            #             'transition': 'background-color 0.2s'
-            #         },
-            #         className='icon-button'
-            #     ),
-            #     html.Div(
-            #         icon("mdi:account", width=20, color='#475569'),
-            #         style={
-            #             'width': '36px',
-            #             'height': '36px',
-            #             'display': 'flex',
-            #             'alignItems': 'center',
-            #             'justifyContent': 'center',
-            #             'cursor': 'pointer',
-            #             'borderRadius': '9999px',
-            #             'transition': 'background-color 0.2s'
-            #         },
-            #         className='icon-button'
-            #     )
-            # ], style={'display': 'flex', 'alignItems': 'center', 'gap': '8px'})
+            # Right side - icons
+            html.Div([
+                html.Div(
+                    icon("mdi:bell", width=20, color='#475569'),
+                    style={
+                        'width': '36px',
+                        'height': '36px',
+                        'display': 'flex',
+                        'alignItems': 'center',
+                        'justifyContent': 'center',
+                        'cursor': 'pointer',
+                        'borderRadius': '6px',
+                        'transition': 'background-color 0.2s'
+                    },
+                    className='icon-button'
+                ),
+                html.Div(
+                    icon("mdi:cog", width=20, color='#475569'),
+                    style={
+                        'width': '36px',
+                        'height': '36px',
+                        'display': 'flex',
+                        'alignItems': 'center',
+                        'justifyContent': 'center',
+                        'cursor': 'pointer',
+                        'borderRadius': '6px',
+                        'transition': 'background-color 0.2s'
+                    },
+                    className='icon-button'
+                ),
+                html.Div(
+                    icon("mdi:account", width=20, color='#475569'),
+                    style={
+                        'width': '36px',
+                        'height': '36px',
+                        'display': 'flex',
+                        'alignItems': 'center',
+                        'justifyContent': 'center',
+                        'cursor': 'pointer',
+                        'borderRadius': '9999px',
+                        'transition': 'background-color 0.2s'
+                    },
+                    className='icon-button'
+                )
+            ], style={'display': 'flex', 'alignItems': 'center', 'gap': '8px'})
         ], style={
             'display': 'flex',
             'alignItems': 'center',
+            'justifyContent': 'space-between',
             'height': '64px',
             'padding': '0 16px'
         })

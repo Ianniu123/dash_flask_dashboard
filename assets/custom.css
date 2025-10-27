@@ -18,7 +18,6 @@ body {
     background-color: #f8fafc;
 }
 
-
 /* Sidebar Toggle Button */
 .sidebar-toggle-btn:hover {
     background-color: #f8fafc;
@@ -68,11 +67,24 @@ body {
     display: none !important;
 }
 
+/* Center the logo when collapsed */
+#sidebar-container[style*="width: 60px"] > div:first-child > div,
+#sidebar-container[style*="minWidth: 60px"] > div:first-child > div {
+    justify-content: center !important;
+}
+
 /* Smooth nav text transitions */
 .nav-text {
     transition: opacity 0.2s ease, width 0.2s ease;
     white-space: nowrap;
     overflow: hidden;
+}
+
+/* Active nav item styling adjustments */
+#sidebar-container[style*="width: 60px"] .nav-item,
+#sidebar-container[style*="minWidth: 60px"] .nav-item {
+    margin: 2px 4px;
+    border-radius: 6px;
 }
 
 /* Collapsible term status buttons */
@@ -436,6 +448,11 @@ tbody td {
     vertical-align: middle;
 }
 
+.hover-bg-slate-50:hover {
+    background-color: #f8fafc;
+    transition: background-color 0.2s;
+}
+
 /* Alert/Toast Styling */
 .alert {
     border-radius: 8px;
@@ -512,25 +529,3 @@ tbody td {
 
 .text-red-800 { color: #991b1b; }
 .bg-red-100 { background-color: #fee2e2; }
-
-/* Evidence navigation button styles */
-.evidence-nav-btn:hover {
-    background-color: #2563eb !important;
-    border-color: #1d4ed8 !important;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2) !important;
-}
-
-.evidence-nav-btn:hover .dash-iconify {
-    color: white !important;
-}
-
-.evidence-nav-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1) !important;
-}
-
-.hover-bg-slate-50:hover {
-    background-color: #f8fafc;
-    transition: background-color 0.2s;
-}

@@ -8,7 +8,13 @@ from dash_iconify import DashIconify
 import math
 
 def icon(name, **kwargs):
-    """Helper function to create DashIconify icons"""
+    """Helper function to create DashIconify icons with CSS color styling"""
+    color = kwargs.pop('color', None)
+    if color:
+        return html.Span(
+            DashIconify(icon=name, **kwargs),
+            style={'color': color}
+        )
     return DashIconify(icon=name, **kwargs)
 
 def get_matching_rate_badge(rate):
@@ -91,7 +97,7 @@ def get_completed_reviews_layout(contracts):
                             style={'padding': '4px 8px'}
                         )
                     ], style={'display': 'flex', 'gap': '8px', 'justifyContent': 'flex-end'})
-                ], style={'padding': '12px', 'textAlign': 'right'}) 
+                ], style={'padding': '12px', 'textAlign': 'right'})
             ], style={'borderBottom': '1px solid #e2e8f0'}, className='table-row-hover')
         )
     

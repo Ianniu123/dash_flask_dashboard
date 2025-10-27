@@ -7,7 +7,13 @@ import dash_bootstrap_components as dbc
 from dash_iconify import DashIconify
 
 def icon(name, **kwargs):
-    """Helper function to create DashIconify icons"""
+    """Helper function to create DashIconify icons with CSS color styling"""
+    color = kwargs.pop('color', None)
+    if color:
+        return html.Span(
+            DashIconify(icon=name, **kwargs),
+            style={'color': color}
+        )
     return DashIconify(icon=name, **kwargs)
 
 def create_evidence_offcanvas():
@@ -126,67 +132,31 @@ def render_evidence_content(subpoint, current_index=0):
             # Navigation controls (only show if more than 1 evidence)
             (html.Div([
                 dbc.Button(
-                    icon("mdi:chevron-left", width=20, color='#2563eb'),
-                    id={'type': 'evidence-nav-btn', 'direction': 'prev'},
-                    color='primary',
+                    icon("mdi:chevron-left", width=16),
+                    id='evidence-prev-btn',
+                    color='light',
                     outline=True,
-                    size='md',
-                    style={
-                        'width': '44px', 
-                        'height': '44px', 
-                        'padding': 0,
-                        'borderRadius': '8px',
-                        'border': '2px solid #2563eb',
-                        'backgroundColor': 'white',
-                        'transition': 'all 0.2s ease',
-                        'boxShadow': '0 2px 4px rgba(37, 99, 235, 0.1)'
-                    },
-                    className='evidence-nav-btn'
+                    size='sm',
+                    style={'width': '36px', 'height': '36px', 'padding': 0}
                 ),
-                html.Div([
-                    html.Span(
-                        f"{current_index + 1}",
-                        style={
-                            'fontSize': '18px',
-                            'fontWeight': '600',
-                            'color': '#2563eb'
-                        }
-                    ),
-                    html.Span(
-                        f" of {evidence_count}",
-                        style={
-                            'fontSize': '14px',
-                            'color': '#64748b',
-                            'marginLeft': '4px'
-                        }
-                    )
-                ], style={
-                    'minWidth': '80px',
-                    'textAlign': 'center',
-                    'padding': '8px 16px',
-                    'backgroundColor': '#f8fafc',
-                    'borderRadius': '8px',
-                    'border': '1px solid #e2e8f0'
-                }),
-                dbc.Button(
-                    icon("mdi:chevron-right", width=20, color='#2563eb'),
-                    id={'type': 'evidence-nav-btn', 'direction': 'next'},
-                    color='primary',
-                    outline=True,
-                    size='md',
+                html.Span(
+                    f"{current_index + 1} of {evidence_count}",
                     style={
-                        'width': '44px', 
-                        'height': '44px', 
-                        'padding': 0,
-                        'borderRadius': '8px',
-                        'border': '2px solid #2563eb',
-                        'backgroundColor': 'white',
-                        'transition': 'all 0.2s ease',
-                        'boxShadow': '0 2px 4px rgba(37, 99, 235, 0.1)'
-                    },
-                    className='evidence-nav-btn'
+                        'fontSize': '14px',
+                        'color': '#64748b',
+                        'minWidth': '75px',
+                        'textAlign': 'center'
+                    }
+                ),
+                dbc.Button(
+                    icon("mdi:chevron-right", width=16),
+                    id='evidence-next-btn',
+                    color='light',
+                    outline=True,
+                    size='sm',
+                    style={'width': '36px', 'height': '36px', 'padding': 0}
                 )
-            ], style={'display': 'flex', 'alignItems': 'center', 'gap': '16px'}) if evidence_count > 1 else None)
+            ], style={'display': 'flex', 'alignItems': 'center', 'gap': '12px'}) if evidence_count > 1 else None)
         ], style={
             'display': 'flex',
             'justifyContent': 'space-between',

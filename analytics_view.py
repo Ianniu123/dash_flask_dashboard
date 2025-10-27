@@ -13,7 +13,13 @@ from datetime import datetime, timedelta
 import random
 
 def icon(name, **kwargs):
-    """Helper function to create DashIconify icons"""
+    """Helper function to create DashIconify icons with CSS color styling"""
+    color = kwargs.pop('color', None)
+    if color:
+        return html.Span(
+            DashIconify(icon=name, **kwargs),
+            style={'color': color}
+        )
     return DashIconify(icon=name, **kwargs)
 
 # Generate mock analytics data

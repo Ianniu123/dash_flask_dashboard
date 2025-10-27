@@ -10,7 +10,13 @@ import json
 from evidence_offcanvas import create_evidence_offcanvas
 
 def icon(name, **kwargs):
-    """Helper function to create DashIconify icons"""
+    """Helper function to create DashIconify icons with CSS color styling"""
+    color = kwargs.pop('color', None)
+    if color:
+        return html.Span(
+            DashIconify(icon=name, **kwargs),
+            style={'color': color}
+        )
     return DashIconify(icon=name, **kwargs)
 
 # Full compliance terms data (all 40 terms)
@@ -621,104 +627,243 @@ def get_contract_detail_layout(contract):
         score = round((met_subpoints / total_subpoints) * 100)
         historical_rate = get_historical_adherence(term['heading'])
         
-        # Build subpoint cards
+        # Build subpoint cards with improved layout
         subpoint_cards = []
         for idx, sp in enumerate(term['subPoints']):
             subpoint_cards.append(
                 html.Div([
-                    # Subpoint card
+                    # Subpoint card with improved styling
                     html.Div([
-                        # Icon
-                        html.Div(
-                            icon("mdi:check-circle" if sp['met'] else "mdi:close-circle",
-                                 width=16,
-                                 color='#16a34a' if sp['met'] else '#dc2626'),
-                            style={'flexShrink': 0, 'marginTop': '2px'}
-                        ),
-                        # Content
+                        # Main content area
                         html.Div([
-                            # Header row with title and badge
+                            # Icon
+                            html.Div(
+                                icon("mdi:check-circle" if sp['met'] else "mdi:close-circle",
+                                     width=20,
+                                     color='#16a34a' if sp['met'] else '#dc2626'),
+                                style={'flexShrink': 0, 'marginTop': '2px'}
+                            ),
+                            # Content
                             html.Div([
-                                html.Div([
-                                    html.H5(sp['heading'], style={'fontSize': '14px', 'color': '#0f172a', 'margin': 0, 'fontWeight': 500}),
-                                    html.P(sp.get('description', ''), style={'fontSize': '12px', 'color': '#64748b', 'margin': '4px 0 0 0', 'lineHeight': '1.4'})
-                                ], style={'flex': 1, 'minWidth': 0}),
-                                html.Span(
-                                    "Met" if sp['met'] else "Not Met",
-                                    style={
-                                        'padding': '2px 8px',
-                                        'borderRadius': '9999px',
-                                        'fontSize': '11px',
-                                        'fontWeight': 500,
-                                        'flexShrink': 0,
-                                        'backgroundColor': '#dcfce7' if sp['met'] else '#fee2e2',
-                                        'color': '#166534' if sp['met'] else '#991b1b',
-                                        'border': f"1px solid {'#bbf7d0' if sp['met'] else '#fecaca'}"
-                                    }
-                                )
-                            ], style={'display': 'flex', 'alignItems': 'start', 'justifyContent': 'space-between', 'gap': '12px'}),
-                            # Action buttons
-                            html.Div([
-                                dbc.Button([
-                                    icon("mdi:open-in-new", width=12, style={'marginRight': '4px'}),
-                                    html.Span(f"View Evidence ({len(sp.get('evidence', []))})", style={'fontSize': '11px'})
-                                ], 
-                                    id={'type': 'view-evidence-btn', 'term_id': term['id'], 'subpoint_idx': idx},
-                                    color='link',
-                                    size='sm',
-                                    style={'display': 'inline-flex', 'alignItems': 'center', 'color': '#2563eb', 'textDecoration': 'none', 'padding': '0', 'marginRight': '12px', 'border': 'none'}
-                                ) if sp.get('evidence') and len(sp.get('evidence', [])) > 0 else None,
-                                dbc.Button([
-                                    icon("mdi:file-document-outline", width=12, style={'marginRight': '4px'}),
-                                    html.Span("View Analysis", style={'fontSize': '11px'})
-                                ], 
-                                    id={'type': 'toggle-analysis-btn', 'term_id': term['id'], 'subpoint_idx': idx},
-                                    color='link',
-                                    size='sm',
-                                    style={'display': 'inline-flex', 'alignItems': 'center', 'color': '#6366f1', 'textDecoration': 'none', 'padding': '0', 'border': 'none'}
-                                ) if sp.get('analysis') else None
-                            ], style={'marginTop': '8px'}) if (sp.get('evidence') and len(sp.get('evidence', [])) > 0) or sp.get('analysis') else None,
-                            # Analysis collapse section
-                            dbc.Collapse([
+                                # Header row with title and badge
                                 html.Div([
                                     html.Div([
-                                        html.Div(style={
-                                            'width': '4px',
-                                            'height': '20px',
-                                            'backgroundColor': '#6366f1',
-                                            'borderRadius': '9999px'
-                                        }),
-                                        html.H5("ANALYSIS", style={
-                                            'fontSize': '10px',
-                                            'color': '#4f46e5',
-                                            'textTransform': 'uppercase',
-                                            'letterSpacing': '0.05em',
+                                        html.H5(sp['heading'], style={'fontSize': '14px', 'color': '#0f172a', 'margin': '0 0 4px 0', 'fontWeight': 500}),
+                                        html.P(sp.get('description', ''), style={'fontSize': '12px', 'color': '#64748b', 'margin': 0, 'lineHeight': '1.5'})
+                                    ], style={'flex': 1, 'minWidth': 0}),
+                                    html.Div([
+                                        html.Span(
+                                            "Met" if sp['met'] else "Not Met",
+                                            style={
+                                                'padding': '2px 8px',
+                                                'borderRadius': '9999px',
+                                                'fontSize': '11px',
+                                                'fontWeight': 500,
+                                                'flexShrink': 0,
+                                                'backgroundColor': '#dcfce7' if sp['met'] else '#fee2e2',
+                                                'color': '#166534' if sp['met'] else '#991b1b',
+                                                'border': f"1px solid {'#86efac' if sp['met'] else '#fca5a5'}"
+                                            }
+                                        )
+                                    ], style={'display': 'flex', 'alignItems': 'center', 'gap': '8px', 'flexShrink': 0})
+                                ], style={'display': 'flex', 'alignItems': 'start', 'justifyContent': 'space-between', 'gap': '12px', 'marginBottom': '8px'}),
+                                
+                                # Evidence and Analysis Links Row
+                                html.Div([
+                                    dbc.Button([
+                                        icon("mdi:open-in-new", width=14, style={'marginRight': '4px'}),
+                                        html.Span(f"View Evidence ({len(sp.get('evidence', []))})", style={'fontSize': '12px'})
+                                    ], 
+                                        id={'type': 'view-evidence-btn', 'term_id': term['id'], 'subpoint_idx': idx},
+                                        color='link',
+                                        size='sm',
+                                        style={'display': 'inline-flex', 'alignItems': 'center', 'color': '#2563eb', 'textDecoration': 'none', 'padding': '0', 'border': 'none', 'backgroundColor': 'transparent'}
+                                    ) if sp.get('evidence') and len(sp.get('evidence', [])) > 0 else None,
+                                    dbc.Button([
+                                        icon("mdi:file-document-outline", width=14, style={'marginRight': '4px'}),
+                                        html.Span("View Analysis", style={'fontSize': '12px'})
+                                    ], 
+                                        id={'type': 'toggle-analysis-btn', 'term_id': term['id'], 'subpoint_idx': idx},
+                                        color='link',
+                                        size='sm',
+                                        style={'display': 'inline-flex', 'alignItems': 'center', 'color': '#6366f1', 'textDecoration': 'none', 'padding': '0', 'border': 'none', 'backgroundColor': 'transparent'}
+                                    ) if sp.get('analysis') else None
+                                ], style={
+                                    'display': 'flex',
+                                    'alignItems': 'center',
+                                    'gap': '16px',
+                                    'paddingTop': '12px',
+                                    'paddingBottom': '12px',
+                                    'borderBottom': '1px solid #e2e8f0'
+                                }) if (sp.get('evidence') and len(sp.get('evidence', [])) > 0) or sp.get('analysis') else None,
+                                
+                                # Attestation Controls Section
+                                html.Div([
+                                    # Initial state: Approve and Override buttons
+                                    html.Div([
+                                        dbc.Button([
+                                            icon("mdi:thumb-up", width=14, style={'marginRight': '4px'}),
+                                            "Approve"
+                                        ], 
+                                            id={'type': 'approve-btn', 'term_id': term['id'], 'subpoint_idx': idx},
+                                            outline=True,
+                                            size='sm',
+                                            style={
+                                                'display': 'inline-flex',
+                                                'alignItems': 'center',
+                                                'gap': '4px',
+                                                'color': '#15803d',
+                                                'borderColor': '#86efac',
+                                                'backgroundColor': 'white',
+                                                'fontSize': '12px',
+                                                'padding': '4px 12px'
+                                            }
+                                        ),
+                                        dbc.Button([
+                                            icon("mdi:pencil", width=14, style={'marginRight': '4px'}),
+                                            "Override"
+                                        ], 
+                                            id={'type': 'override-btn', 'term_id': term['id'], 'subpoint_idx': idx},
+                                            outline=True,
+                                            size='sm',
+                                            style={
+                                                'display': 'inline-flex',
+                                                'alignItems': 'center',
+                                                'gap': '4px',
+                                                'color': '#b45309',
+                                                'borderColor': '#fcd34d',
+                                                'backgroundColor': 'white',
+                                                'fontSize': '12px',
+                                                'padding': '4px 12px',
+                                                'marginLeft': '8px'
+                                            }
+                                        )
+                                    ], id={'type': 'attestation-initial', 'term_id': term['id'], 'subpoint_idx': idx}, style={'display': 'flex', 'alignItems': 'center', 'gap': '8px'}),
+                                    
+                                    # Approved state
+                                    html.Div([
+                                        html.Div([
+                                            icon("mdi:check-circle", width=16, color='#15803d', style={'marginRight': '8px'}),
+                                            html.Span("Approved", style={'fontSize': '14px', 'color': '#15803d'})
+                                        ], style={'display': 'flex', 'alignItems': 'center', 'flex': 1}),
+                                        dbc.Button("Change", 
+                                            id={'type': 'change-approval-btn', 'term_id': term['id'], 'subpoint_idx': idx},
+                                            size='sm',
+                                            color='link',
+                                            style={'fontSize': '12px', 'color': '#64748b', 'padding': '4px 8px'}
+                                        )
+                                    ], id={'type': 'attestation-approved', 'term_id': term['id'], 'subpoint_idx': idx}, 
+                                       style={'display': 'none', 'alignItems': 'center', 'justifyContent': 'space-between', 'padding': '8px 12px', 'backgroundColor': '#dcfce7', 'borderRadius': '6px', 'border': '1px solid #bbf7d0'}),
+                                    
+                                    # Overridden state
+                                    html.Div([
+                                        html.Div([
+                                            html.Div([
+                                                icon("mdi:pencil", width=16, color='#b45309', style={'marginRight': '8px'}),
+                                                html.Span(id={'type': 'override-status-text', 'term_id': term['id'], 'subpoint_idx': idx}, 
+                                                         children="Overridden", style={'fontSize': '14px', 'color': '#b45309'})
+                                            ], style={'display': 'flex', 'alignItems': 'center', 'flex': 1}),
+                                            dbc.Button("Edit", 
+                                                id={'type': 'edit-override-btn', 'term_id': term['id'], 'subpoint_idx': idx},
+                                                size='sm',
+                                                color='link',
+                                                style={'fontSize': '12px', 'color': '#64748b', 'padding': '4px 8px'}
+                                            )
+                                        ], style={'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between', 'marginBottom': '8px'}),
+                                        html.Div(id={'type': 'override-reason-display', 'term_id': term['id'], 'subpoint_idx': idx},
+                                                children="",
+                                                style={'fontSize': '12px', 'color': '#78350f', 'backgroundColor': 'white', 'padding': '8px', 'borderRadius': '4px', 'border': '1px solid #fde68a'})
+                                    ], id={'type': 'attestation-overridden', 'term_id': term['id'], 'subpoint_idx': idx}, 
+                                       style={'display': 'none', 'padding': '8px 12px', 'backgroundColor': '#fef3c7', 'borderRadius': '6px', 'border': '1px solid #fde68a'}),
+                                    
+                                    # Editing/Override form
+                                    html.Div([
+                                        html.Div([
+                                            html.Label("Override Result", style={'fontSize': '14px', 'color': '#334155', 'marginBottom': '8px', 'display': 'block'}),
+                                            html.Div([
+                                                html.Span(id={'type': 'override-switch-label', 'term_id': term['id'], 'subpoint_idx': idx},
+                                                         children="Met" if sp['met'] else "Not Met",
+                                                         style={'fontSize': '12px', 'fontWeight': 500, 'marginRight': '8px'}),
+                                                dbc.Switch(
+                                                    id={'type': 'override-switch', 'term_id': term['id'], 'subpoint_idx': idx},
+                                                    value=sp['met']
+                                                )
+                                            ], style={'display': 'flex', 'alignItems': 'center', 'justifyContent': 'flex-end', 'marginBottom': '12px'})
+                                        ]),
+                                        html.Div([
+                                            html.Label([
+                                                "Reason ",
+                                                html.Span("*", style={'color': '#dc2626'}),
+                                                html.Span(" (Optional)", id={'type': 'reason-optional-label', 'term_id': term['id'], 'subpoint_idx': idx}, 
+                                                         style={'color': '#64748b'})
+                                            ], style={'fontSize': '14px', 'color': '#334155', 'marginBottom': '6px', 'display': 'block'}),
+                                            dbc.Textarea(
+                                                id={'type': 'override-reason-input', 'term_id': term['id'], 'subpoint_idx': idx},
+                                                placeholder="Explain why you are overriding this result...",
+                                                style={'fontSize': '14px', 'minHeight': '80px', 'backgroundColor': 'white'}
+                                            )
+                                        ], style={'marginBottom': '12px'}),
+                                        html.Div([
+                                            dbc.Button([
+                                                icon("mdi:content-save", width=14, style={'marginRight': '6px'}),
+                                                "Save Override"
+                                            ],
+                                                id={'type': 'save-override-btn', 'term_id': term['id'], 'subpoint_idx': idx},
+                                                color='success',
+                                                size='sm',
+                                                style={'marginRight': '8px'}
+                                            ),
+                                            dbc.Button([
+                                                icon("mdi:close", width=14, style={'marginRight': '6px'}),
+                                                "Cancel"
+                                            ],
+                                                id={'type': 'cancel-override-btn', 'term_id': term['id'], 'subpoint_idx': idx},
+                                                outline=True,
+                                                size='sm'
+                                            )
+                                        ], style={'display': 'flex', 'alignItems': 'center'})
+                                    ], id={'type': 'attestation-editing', 'term_id': term['id'], 'subpoint_idx': idx},
+                                       style={'display': 'none', 'padding': '16px', 'background': 'linear-gradient(to bottom right, #fef3c7, #fed7aa)', 'borderRadius': '8px', 'border': '2px solid #fcd34d'})
+                                ], style={'marginTop': '12px'}),
+                                
+                                # Analysis collapse section (shown when "View Analysis" is clicked)
+                                dbc.Collapse([
+                                    html.Div([
+                                        html.Div([
+                                            html.Div(style={
+                                                'width': '4px',
+                                                'height': '16px',
+                                                'backgroundColor': '#6366f1',
+                                                'borderRadius': '9999px'
+                                            }),
+                                            html.H6("POINT ANALYSIS", style={
+                                                'fontSize': '10px',
+                                                'color': '#4f46e5',
+                                                'textTransform': 'uppercase',
+                                                'letterSpacing': '0.05em',
+                                                'margin': 0
+                                            })
+                                        ], style={'display': 'flex', 'alignItems': 'center', 'gap': '8px', 'marginBottom': '8px'}),
+                                        html.P(sp.get('analysis', ''), style={
+                                            'fontSize': '14px',
+                                            'color': '#1e293b',
+                                            'lineHeight': '1.6',
                                             'margin': 0
                                         })
-                                    ], style={'display': 'flex', 'alignItems': 'center', 'gap': '10px', 'marginBottom': '8px'}),
-                                    html.P(sp.get('analysis', ''), style={
-                                        'fontSize': '13px',
-                                        'color': '#1e293b',
-                                        'lineHeight': '1.6',
-                                        'margin': 0
+                                    ], style={
+                                        'backgroundColor': '#eef2ff',
+                                        'padding': '16px',
+                                        'borderRadius': '8px',
+                                        'border': '1px solid #c7d2fe',
+                                        'marginTop': '12px'
                                     })
-                                ], style={
-                                    'backgroundColor': '#eef2ff',
-                                    'padding': '12px',
-                                    'borderRadius': '6px',
-                                    'border': '1px solid #c7d2fe',
-                                    'marginTop': '8px'
-                                })
-                            ], id={'type': 'analysis-collapse', 'term_id': term['id'], 'subpoint_idx': idx}, is_open=False) if sp.get('analysis') else None
-                        ], style={'flex': 1, 'minWidth': 0})
+                                ], id={'type': 'analysis-collapse', 'term_id': term['id'], 'subpoint_idx': idx}, is_open=False) if sp.get('analysis') else None
+                            ], style={'flex': 1, 'minWidth': 0})
+                        ], style={'display': 'flex', 'alignItems': 'start', 'gap': '12px', 'padding': '16px'})
                     ], style={
-                        'display': 'flex',
-                        'alignItems': 'start',
-                        'gap': '12px',
-                        'padding': '12px',
-                        'backgroundColor': '#f8fafc',
-                        'border': '1px solid #e2e8f0',
                         'borderRadius': '8px',
+                        'border': '1px solid #e2e8f0',
+                        'backgroundColor': 'white',
                         'marginBottom': '12px' if idx < len(term['subPoints']) - 1 else '0'
                     })
                 ])
@@ -824,7 +969,7 @@ def get_contract_detail_layout(contract):
             dbc.Button([
                 icon("mdi:arrow-left", width=16, style={'marginRight': '8px'}),
                 "Back to Reviews"
-            ], id={'type': 'back-to-reviews-btn', 'index': 'main'}, color="link", size="sm",
+            ], id='back-to-reviews-nav-btn', color="link", size="sm",
                style={'padding': '8px 16px', 'marginBottom': '16px', 'fontSize': '14px'}),
             
             html.Div([
@@ -848,8 +993,34 @@ def get_contract_detail_layout(contract):
                         html.Div(icon("mdi:file-document", width=20, color='#2563eb'), style={'marginRight': '8px'}),
                         html.H5(contract['name'], style={'margin': 0})
                     ], style={'display': 'flex', 'alignItems': 'center'}),
-                    html.P("reviewed on")
-                ])
+                    html.Div([
+                        html.Span(
+                            contract['status'].replace('-', ' ').title(),
+                            style={
+                                'padding': '4px 12px',
+                                'borderRadius': '9999px',
+                                'fontSize': '12px',
+                                'fontWeight': 500,
+                                'backgroundColor': status_color['bg'],
+                                'color': status_color['text'],
+                                'border': f"1px solid {status_color['border']}",
+                                'marginRight': '8px'
+                            }
+                        ),
+                        html.Span(
+                            f"{contract['riskLevel'].title()} Risk",
+                            style={
+                                'padding': '4px 12px',
+                                'borderRadius': '9999px',
+                                'fontSize': '12px',
+                                'fontWeight': 500,
+                                'backgroundColor': risk_color['bg'],
+                                'color': risk_color['text'],
+                                'border': f"1px solid {risk_color['border']}"
+                            }
+                        )
+                    ], style={'display': 'flex'})
+                ], style={'display': 'flex', 'justifyContent': 'space-between', 'alignItems': 'center'})
             ]),
             dbc.CardBody([
                 # Metadata grid (5 columns only - removed matching rates)
@@ -1069,9 +1240,64 @@ def get_contract_detail_layout(contract):
                        style={'fontSize': '14px', 'color': '#64748b', 'margin': '8px 0 0 0'})
             ]),
             dbc.CardBody([
-                html.Div(accordion_items, id='compliance-accordion')
+                html.Div(accordion_items, id='compliance-accordion'),
+                
+                # Attestation Progress and Button (hidden when attested)
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            html.Div([
+                                html.H4("Review Progress", style={'fontSize': '14px', 'color': '#0f172a', 'margin': '0 0 4px 0'}),
+                                html.P([
+                                    html.Span(id='reviewed-count', children='0'),
+                                    f" of {total_points} subpoints reviewed"
+                                ], style={'fontSize': '12px', 'color': '#64748b', 'margin': 0})
+                            ], style={'flex': 1}),
+                            html.Div(id='progress-percentage', children='0%', style={'fontSize': '14px', 'color': '#0f172a'})
+                        ], style={'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between', 'marginBottom': '16px'}),
+                        dbc.Progress(id='attestation-progress', value=0, style={'height': '8px', 'marginBottom': '16px'}),
+                        html.Div([
+                            dbc.Button([
+                                icon("mdi:check-circle", width=16, style={'marginRight': '8px'}),
+                                "Attest Review"
+                            ], 
+                                id='attest-review-btn',
+                                color='primary',
+                                disabled=True,
+                                className='w-100',
+                                style={'display': 'flex', 'alignItems': 'center', 'justifyContent': 'center'}
+                            )
+                        ], id='attest-btn-container', style={'marginBottom': '8px'}),
+                        html.P("Please review all subpoints before attesting",
+                               id='attest-message',
+                               style={'fontSize': '12px', 'color': '#64748b', 'textAlign': 'center', 'fontStyle': 'italic', 'margin': 0})
+                    ], style={'padding': '16px', 'backgroundColor': '#f8fafc', 'borderRadius': '8px', 'border': '1px solid #e2e8f0'})
+                ], id='attestation-progress-container', style={'marginTop': '24px'}),
+                
+                # Attested Confirmation (hidden initially)
+                html.Div([
+                    html.Div([
+                        html.Div([
+                            html.Div([
+                                html.Div([
+                                    icon("mdi:check-circle", width=24, color='#16a34a')
+                                ], style={'display': 'flex', 'alignItems': 'center', 'justifyContent': 'center', 'width': '40px', 'height': '40px', 'borderRadius': '50%', 'backgroundColor': '#dcfce7', 'flexShrink': 0}),
+                                html.Div([
+                                    html.H4("Review Attested", style={'fontSize': '14px', 'color': '#166534', 'margin': '0 0 4px 0'}),
+                                    html.P(f"All {total_points} subpoints have been reviewed and the attestation is complete.",
+                                           style={'fontSize': '12px', 'color': '#15803d', 'margin': 0})
+                                ], style={'flex': 1})
+                            ], style={'display': 'flex', 'alignItems': 'center', 'gap': '12px'})
+                        ])
+                    ], style={'padding': '16px', 'backgroundColor': '#f0fdf4', 'borderRadius': '8px', 'border': '1px solid #bbf7d0'})
+                ], id='attested-confirmation', style={'marginTop': '24px', 'display': 'none'})
             ])
         ]),
+        
+        # Hidden stores for attestation state
+        dcc.Store(id='attestation-store', data=[]),  # List of attestations
+        dcc.Store(id='is-attested-store', data=False),  # Whether review is attested
+        
         # Evidence offcanvas (modal/drawer for viewing evidence)
         create_evidence_offcanvas()
     ], style={'padding': '0'})
