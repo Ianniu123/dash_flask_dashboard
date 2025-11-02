@@ -9,13 +9,7 @@ from dash_iconify import DashIconify
 import plotly.graph_objects as go
 
 def icon(name, **kwargs):
-    """Helper function to create DashIconify icons with CSS color styling"""
-    color = kwargs.pop('color', None)
-    if color:
-        return html.Span(
-            DashIconify(icon=name, **kwargs),
-            style={'color': color}
-        )
+    """Helper function to create DashIconify icons"""
     return DashIconify(icon=name, **kwargs)
 
 def create_sidebar():
@@ -25,7 +19,7 @@ def create_sidebar():
         html.Div([
             html.Div([
                 html.Div(
-                    icon("mdi:file-document", width=20, color='#ffffff'),
+                    icon("mdi:file-document", width=20, color='white'),
                     style={
                         'width': '32px',
                         'height': '32px',

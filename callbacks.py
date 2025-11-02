@@ -2,7 +2,7 @@
 Callbacks for the Contract Compliance Dashboard
 """
 
-from dash import Input, Output, State, ALL, MATCH, ctx, callback, no_update, html
+from dash import Input, Output, State, ALL, MATCH, ctx, callback, no_update
 from dash.exceptions import PreventUpdate
 import json
 
@@ -162,20 +162,25 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         
         return submenu_style, chevron_style
     
-    # Contract selection and navigation callback
+    # Combined contract selection, back button, and navigation callback
     @app.callback(
         Output('selected-contract', 'data'),
         [Input({'type': 'view-contract-btn', 'index': ALL}, 'n_clicks'),
+         Input('back-to-reviews-btn', 'n_clicks'),
          Input({'type': 'nav-item', 'index': ALL}, 'n_clicks')],
         [State({'type': 'view-contract-btn', 'index': ALL}, 'id')],
         prevent_initial_call=True
     )
-    def handle_contract_selection(view_clicks, nav_clicks, btn_ids):
-        """Handle contract selection from table and navigation"""
+    def handle_contract_selection(view_clicks, back_clicks, nav_clicks, btn_ids):
+        """Handle contract selection from table, back button, and navigation"""
         if not ctx.triggered:
             raise PreventUpdate
         
         triggered = ctx.triggered_id
+        
+        # Handle back button
+        if triggered == 'back-to-reviews-btn':
+            return None
         
         # Handle navigation - clear selected contract
         if triggered and isinstance(triggered, dict) and triggered.get('type') == 'nav-item':
@@ -188,18 +193,6 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
             contract = next((c for c in MOCK_CONTRACTS if c['id'] == contract_id), None)
             return contract
         
-        raise PreventUpdate
-    
-    # Back button callback for contract detail view
-    @app.callback(
-        Output('selected-contract', 'data', allow_duplicate=True),
-        [Input('back-to-reviews-nav-btn', 'n_clicks')],
-        prevent_initial_call=True
-    )
-    def handle_back_button(back_clicks):
-        """Handle back button click to return to reviews view"""
-        if back_clicks:
-            return None
         raise PreventUpdate
     
     # Toggle collapsible term status breakdowns in contract detail view
@@ -457,63 +450,42 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         
         return {'display': 'flex'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}
     
-    # Handle Save Override button - Update attestation store
+    # Handle Save Override button - update attestation store only (ALL pattern)
     @app.callback(
         Output('attestation-store', 'data', allow_duplicate=True),
         [Input({'type': 'save-override-btn', 'term_id': ALL, 'subpoint_idx': ALL}, 'n_clicks')],
-        [State({'type': 'override-switch', 'term_id': ALL, 'subpoint_idx': ALL}, 'value'),
+        [State({'type': 'override-dropdown', 'term_id': ALL, 'subpoint_idx': ALL}, 'value'),
          State({'type': 'override-reason-input', 'term_id': ALL, 'subpoint_idx': ALL}, 'value'),
          State('attestation-store', 'data'),
          State({'type': 'save-override-btn', 'term_id': ALL, 'subpoint_idx': ALL}, 'id')],
         prevent_initial_call=True
     )
-    def save_override_to_store(n_clicks_list, override_values, reasons, attestations, btn_ids):
-        """Save override decision to attestation store"""
-        from contract_detail_view import COMPLIANCE_TERMS
-        
+    def update_attestation_store(n_clicks_list, override_values, reason_values, store, btn_ids):
         if not any(n_clicks_list):
             raise PreventUpdate
-        
-        # Find which button was clicked
-        triggered_id = ctx.triggered_id
-        if not triggered_id:
-            raise PreventUpdate
-        
-        term_id = triggered_id['term_id']
-        subpoint_idx = triggered_id['subpoint_idx']
-        
-        # Find the corresponding values
-        override_value = None
-        reason = None
-        for i, btn_id in enumerate(btn_ids):
-            if btn_id['term_id'] == term_id and btn_id['subpoint_idx'] == subpoint_idx:
-                override_value = override_values[i]
-                reason = reasons[i]
-                break
-        
-        if override_value is None:
-            raise PreventUpdate
-        
+        triggered = ctx.triggered_id
+        idx = [i for i, idval in enumerate(btn_ids) if idval == triggered][0]
+        term_id = btn_ids[idx]['term_id']
+        subpoint_idx = btn_ids[idx]['subpoint_idx']
+        override_value = override_values[idx]
+        reason = reason_values[idx]
+        from contract_detail_view import COMPLIANCE_TERMS
+        # Helper to convert boolean to status if needed
+        def boolean_to_status(met):
+            return 'supported' if met else 'not-supported'
         # Find the original value
         original_value = None
         for term in COMPLIANCE_TERMS:
             if term['id'] == term_id:
                 if subpoint_idx < len(term['subPoints']):
-                    original_value = term['subPoints'][subpoint_idx]['met']
+                    original_value = boolean_to_status(term['subPoints'][subpoint_idx]['met'])
                     break
-        
-        # Validate: if changing the value, reason is required
-        if override_value != original_value and (not reason or not reason.strip()):
-            raise PreventUpdate
-        
-        # Check if attestation already exists
+        # Update store logic, mimicking previous approach
         existing_idx = None
-        for i, att in enumerate(attestations):
+        for i, att in enumerate(store):
             if att['termId'] == term_id and att['subPointIndex'] == subpoint_idx:
                 existing_idx = i
                 break
-        
-        # Create or update attestation
         attestation = {
             'termId': term_id,
             'subPointIndex': subpoint_idx,
@@ -521,15 +493,13 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
             'overriddenValue': override_value,
             'reason': reason if reason else None
         }
-        
         if existing_idx is not None:
-            attestations[existing_idx] = attestation
+            store[existing_idx] = attestation
         else:
-            attestations.append(attestation)
-        
-        return attestations
+            store.append(attestation)
+        return store
     
-    # Handle Save Override button - Update UI state
+    # Handle Save Override UI state - update only subpoint UI (MATCH pattern)
     @app.callback(
         [Output({'type': 'attestation-initial', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style', allow_duplicate=True),
          Output({'type': 'attestation-editing', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style', allow_duplicate=True),
@@ -537,58 +507,70 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
          Output({'type': 'attestation-overridden', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style', allow_duplicate=True),
          Output({'type': 'override-status-text', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'children'),
          Output({'type': 'override-reason-display', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'children')],
-        [Input({'type': 'save-override-btn', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'n_clicks')],
-        [State({'type': 'override-switch', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'value'),
+        Input({'type': 'save-override-btn', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'n_clicks'),
+        [State({'type': 'override-dropdown', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'value'),
          State({'type': 'override-reason-input', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'value')],
         prevent_initial_call=True
     )
-    def save_override_ui(n_clicks, override_value, reason):
-        """Update UI state after saving override"""
+    def update_attestation_ui(n_clicks, override_value, reason):
         if not n_clicks:
             raise PreventUpdate
-        
-        # Prepare display values
-        status_text = f"Overridden: {'Met' if override_value else 'Not Met'}"
-        reason_display = f"Reason: {reason}" if reason else ""
-        
-        # Show overridden state
-        return ({'display': 'none'}, {'display': 'none'}, 
+        # Prepare display values - map status to display text
+        status_display = {
+            'supported': 'Supported',
+            'partially-supported': 'Partially Supported',
+            'not-supported': 'Not Supported'
+        }
+        status_text = f"Overridden: {status_display.get(override_value, override_value)}"
+        # Create reason display with bold Reason prefix
+        from dash import html
+        if reason:
+            reason_display = html.Div([
+                html.Span("Reason: ", style={'fontWeight': 500}),
+                reason
+            ])
+        else:
+            reason_display = ""
+        # Show overridden state (hide editing, show overridden)
+        return ({'display': 'none'}, {'display': 'none'},
                 {'display': 'none'}, {'display': 'block'}, status_text, reason_display)
     
-    # Update override switch label when switch changes
+    # Update reason label when dropdown changes
     @app.callback(
-        [Output({'type': 'override-switch-label', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'children'),
-         Output({'type': 'override-switch-label', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style'),
-         Output({'type': 'reason-optional-label', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'children')],
-        [Input({'type': 'override-switch', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'value')],
-        [State({'type': 'override-switch', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'id')],
+        [Output({'type': 'reason-optional-label', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'children'),
+         Output({'type': 'reason-asterisk', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'children')],
+        [Input({'type': 'override-dropdown', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'value')],
+        [State({'type': 'override-dropdown', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'id')],
         prevent_initial_call=True
     )
-    def update_switch_label(value, switch_id):
-        """Update the switch label when it changes"""
+    def update_reason_label(value, dropdown_id):
+        """Update the reason label when dropdown changes"""
         from contract_detail_view import COMPLIANCE_TERMS
         
-        term_id = switch_id['term_id']
-        subpoint_idx = switch_id['subpoint_idx']
+        term_id = dropdown_id['term_id']
+        subpoint_idx = dropdown_id['subpoint_idx']
+        
+        # Helper to convert boolean to status
+        def boolean_to_status(met):
+            return 'supported' if met else 'not-supported'
         
         # Find the original value
         original_value = None
         for term in COMPLIANCE_TERMS:
             if term['id'] == term_id:
                 if subpoint_idx < len(term['subPoints']):
-                    original_value = term['subPoints'][subpoint_idx]['met']
+                    original_value = boolean_to_status(term['subPoints'][subpoint_idx]['met'])
                     break
         
-        # Include color in the label text using HTML with inline styles
-        color = '#16a34a' if value else '#dc2626'
-        label_html = html.Span(
-            "Met" if value else "Not Met",
-            style={'color': color}
-        )
-        style = {'fontSize': '12px', 'fontWeight': 500, 'marginRight': '8px'}
-        optional_label = " (Optional)" if value == original_value else ""
+        # Show asterisk if value changed, show "(Optional)" if not changed
+        if value == original_value:
+            optional_label = " (Optional)"
+            asterisk = ""
+        else:
+            optional_label = ""
+            asterisk = "*"
         
-        return label_html, style, optional_label
+        return optional_label, asterisk
     
     # Update all subpoint states based on attestation-store
     @app.callback(
@@ -628,12 +610,21 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
                     status_texts.append("")
                     reason_displays.append("")
                 elif attestation['agreed'] == False:
+                    from dash import html
                     initial_styles.append({'display': 'none'})
                     approved_styles.append({'display': 'none'})
-                    overridden_styles.append({'display': 'block', 'padding': '8px 12px', 'backgroundColor': '#fef3c7', 'borderRadius': '6px', 'border': '1px solid #fde68a'})
+                    overridden_styles.append({'display': 'block', 'padding': '8px 12px', 'backgroundColor': '#fffbeb', 'borderRadius': '6px', 'border': '1px solid #fde68a'})
                     status_text = f"Overridden: {'Met' if attestation.get('overriddenValue') else 'Not Met'}"
                     status_texts.append(status_text)
-                    reason_display = f"Reason: {attestation.get('reason')}" if attestation.get('reason') else ""
+                    
+                    # Create reason display with bold "Reason:" prefix
+                    if attestation.get('reason'):
+                        reason_display = html.Div([
+                            html.Span("Reason: ", style={'fontWeight': 500}),
+                            attestation.get('reason')
+                        ])
+                    else:
+                        reason_display = ""
                     reason_displays.append(reason_display)
                 else:
                     initial_styles.append({'display': 'flex', 'alignItems': 'center', 'gap': '8px'})
@@ -696,3 +687,5 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         
         # Set attested state
         return True, {'display': 'none'}, {'marginTop': '24px', 'display': 'block'}
+
+# --- Dedicated callback for contract detail 'Back to Reviews' button ---

@@ -7,13 +7,7 @@ import dash_bootstrap_components as dbc
 from dash_iconify import DashIconify
 
 def icon(name, **kwargs):
-    """Helper function to create DashIconify icons with CSS color styling"""
-    color = kwargs.pop('color', None)
-    if color:
-        return html.Span(
-            DashIconify(icon=name, **kwargs),
-            style={'color': color}
-        )
+    """Helper function to create DashIconify icons"""
     return DashIconify(icon=name, **kwargs)
 
 SUPPORTED_REVIEW_TYPES = [

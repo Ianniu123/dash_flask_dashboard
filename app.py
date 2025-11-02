@@ -419,7 +419,9 @@ app.layout = dbc.Container(
                     }
                 )
             ]
-        )
+        ),
+        # Hidden button for callback registration
+        html.Button(id='back-to-reviews-btn', style={'display': 'none'})
     ]
 )
 
