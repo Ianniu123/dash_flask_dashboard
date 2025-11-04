@@ -420,7 +420,8 @@ app.layout = dbc.Container(
                 )
             ]
         ),
-        # Hidden button for callback registration
+        
+        # Hidden button for callback registration (back-to-reviews-btn only exists in contract detail view)
         html.Button(id='back-to-reviews-btn', style={'display': 'none'})
     ]
 )

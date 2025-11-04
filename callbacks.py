@@ -354,18 +354,18 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
             return "Evidence Details"
         return "Evidence"
     
-    # === ATTESTATION CALLBACKS ===
+    # === TERM-LEVEL ATTESTATION CALLBACKS ===
     
-    # Handle Approve button clicks
+    # Handle Approve Term button clicks
     @app.callback(
-        Output('attestation-store', 'data', allow_duplicate=True),
-        [Input({'type': 'approve-btn', 'term_id': ALL, 'subpoint_idx': ALL}, 'n_clicks')],
-        [State('attestation-store', 'data'),
-         State({'type': 'approve-btn', 'term_id': ALL, 'subpoint_idx': ALL}, 'id')],
+        Output('term-attestation-store', 'data', allow_duplicate=True),
+        [Input({'type': 'approve-term-btn', 'term_id': ALL}, 'n_clicks')],
+        [State('term-attestation-store', 'data'),
+         State({'type': 'approve-term-btn', 'term_id': ALL}, 'id')],
         prevent_initial_call=True
     )
-    def handle_approve_click(n_clicks_list, attestations, btn_ids):
-        """Handle approval of a subpoint result"""
+    def handle_approve_term_click(n_clicks_list, attestations, btn_ids):
+        """Handle approval of a term result"""
         if not any(n_clicks_list):
             raise PreventUpdate
         
@@ -374,19 +374,17 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
             raise PreventUpdate
         
         term_id = triggered_id['term_id']
-        subpoint_idx = triggered_id['subpoint_idx']
         
         # Check if attestation already exists
         existing_idx = None
         for i, att in enumerate(attestations):
-            if att['termId'] == term_id and att['subPointIndex'] == subpoint_idx:
+            if att['termId'] == term_id:
                 existing_idx = i
                 break
         
         # Create or update attestation
         attestation = {
             'termId': term_id,
-            'subPointIndex': subpoint_idx,
             'agreed': True,
             'overriddenValue': None,
             'reason': None
@@ -399,45 +397,44 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         
         return attestations
     
-    # Handle Override button clicks (show editing form)
+    # Handle Override Term button clicks (show editing form)
     @app.callback(
-        [Output({'type': 'attestation-initial', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style'),
-         Output({'type': 'attestation-editing', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style')],
-        [Input({'type': 'override-btn', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'n_clicks'),
-         Input({'type': 'change-approval-btn', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'n_clicks'),
-         Input({'type': 'edit-override-btn', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'n_clicks')],
+        [Output({'type': 'term-attestation-initial', 'term_id': MATCH}, 'style'),
+         Output({'type': 'term-attestation-editing', 'term_id': MATCH}, 'style')],
+        [Input({'type': 'override-term-btn', 'term_id': MATCH}, 'n_clicks'),
+         Input({'type': 'change-term-approval-btn', 'term_id': MATCH}, 'n_clicks'),
+         Input({'type': 'edit-term-override-btn', 'term_id': MATCH}, 'n_clicks')],
         prevent_initial_call=True
     )
-    def show_override_form(override_click, change_click, edit_click):
-        """Show the override editing form"""
+    def show_term_override_form(override_click, change_click, edit_click):
+        """Show the term override editing form"""
         if not any([override_click, change_click, edit_click]):
             raise PreventUpdate
         
         return {'display': 'none'}, {'display': 'block'}
     
-    # Handle Cancel Override button
+    # Handle Cancel Term Override button
     @app.callback(
-        [Output({'type': 'attestation-initial', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style', allow_duplicate=True),
-         Output({'type': 'attestation-editing', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style', allow_duplicate=True),
-         Output({'type': 'attestation-approved', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style', allow_duplicate=True),
-         Output({'type': 'attestation-overridden', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style', allow_duplicate=True)],
-        [Input({'type': 'cancel-override-btn', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'n_clicks')],
-        [State('attestation-store', 'data'),
-         State({'type': 'cancel-override-btn', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'id')],
+        [Output({'type': 'term-attestation-initial', 'term_id': MATCH}, 'style', allow_duplicate=True),
+         Output({'type': 'term-attestation-editing', 'term_id': MATCH}, 'style', allow_duplicate=True),
+         Output({'type': 'term-attestation-approved', 'term_id': MATCH}, 'style', allow_duplicate=True),
+         Output({'type': 'term-attestation-overridden', 'term_id': MATCH}, 'style', allow_duplicate=True)],
+        [Input({'type': 'cancel-term-override-btn', 'term_id': MATCH}, 'n_clicks')],
+        [State('term-attestation-store', 'data'),
+         State({'type': 'cancel-term-override-btn', 'term_id': MATCH}, 'id')],
         prevent_initial_call=True
     )
-    def cancel_override(n_clicks, attestations, btn_id):
-        """Cancel override editing and return to previous state"""
+    def cancel_term_override(n_clicks, attestations, btn_id):
+        """Cancel term override editing and return to previous state"""
         if not n_clicks:
             raise PreventUpdate
         
         term_id = btn_id['term_id']
-        subpoint_idx = btn_id['subpoint_idx']
         
         # Find existing attestation
         attestation = None
         for att in attestations:
-            if att['termId'] == term_id and att['subPointIndex'] == subpoint_idx:
+            if att['termId'] == term_id:
                 attestation = att
                 break
         
@@ -450,71 +447,102 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         
         return {'display': 'flex'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}
     
-    # Handle Save Override button - update attestation store only (ALL pattern)
+    # Handle Save Term Override button - update term attestation store only (ALL pattern)
     @app.callback(
-        Output('attestation-store', 'data', allow_duplicate=True),
-        [Input({'type': 'save-override-btn', 'term_id': ALL, 'subpoint_idx': ALL}, 'n_clicks')],
-        [State({'type': 'override-dropdown', 'term_id': ALL, 'subpoint_idx': ALL}, 'value'),
-         State({'type': 'override-reason-input', 'term_id': ALL, 'subpoint_idx': ALL}, 'value'),
-         State('attestation-store', 'data'),
-         State({'type': 'save-override-btn', 'term_id': ALL, 'subpoint_idx': ALL}, 'id')],
+        Output('term-attestation-store', 'data', allow_duplicate=True),
+        [Input({'type': 'save-term-override-btn', 'term_id': ALL}, 'n_clicks')],
+        [State({'type': 'term-override-dropdown', 'term_id': ALL}, 'value'),
+         State({'type': 'term-override-reason-input', 'term_id': ALL}, 'value'),
+         State('term-attestation-store', 'data'),
+         State({'type': 'save-term-override-btn', 'term_id': ALL}, 'id')],
         prevent_initial_call=True
     )
-    def update_attestation_store(n_clicks_list, override_values, reason_values, store, btn_ids):
+    def update_term_attestation_store(n_clicks_list, override_values, reason_values, attestations, btn_ids):
+        """Save term override decision to term attestation store"""
+        from contract_detail_view import COMPLIANCE_TERMS, get_term_status
+        
         if not any(n_clicks_list):
             raise PreventUpdate
-        triggered = ctx.triggered_id
-        idx = [i for i, idval in enumerate(btn_ids) if idval == triggered][0]
-        term_id = btn_ids[idx]['term_id']
-        subpoint_idx = btn_ids[idx]['subpoint_idx']
-        override_value = override_values[idx]
-        reason = reason_values[idx]
-        from contract_detail_view import COMPLIANCE_TERMS
-        # Helper to convert boolean to status if needed
-        def boolean_to_status(met):
-            return 'supported' if met else 'not-supported'
+        
+        # Find which button was clicked
+        triggered_id = ctx.triggered_id
+        if not triggered_id:
+            raise PreventUpdate
+        
+        term_id = triggered_id['term_id']
+        
+        # Find the corresponding values
+        override_value = None
+        reason = None
+        for i, btn_id in enumerate(btn_ids):
+            if btn_id['term_id'] == term_id:
+                override_value = override_values[i]
+                reason = reason_values[i]
+                break
+        
+        if override_value is None:
+            raise PreventUpdate
+        
+        # Helper to convert term status to dropdown value
+        def status_to_value(status):
+            if status == 'met':
+                return 'supported'
+            elif status == 'partially-met':
+                return 'partially-supported'
+            else:
+                return 'not-supported'
+        
         # Find the original value
         original_value = None
         for term in COMPLIANCE_TERMS:
             if term['id'] == term_id:
-                if subpoint_idx < len(term['subPoints']):
-                    original_value = boolean_to_status(term['subPoints'][subpoint_idx]['met'])
-                    break
-        # Update store logic, mimicking previous approach
+                original_value = status_to_value(get_term_status(term))
+                break
+        
+        # Validate: if changing the value, reason is required
+        if override_value != original_value and (not reason or not reason.strip()):
+            raise PreventUpdate
+        
+        # Check if attestation already exists
         existing_idx = None
-        for i, att in enumerate(store):
-            if att['termId'] == term_id and att['subPointIndex'] == subpoint_idx:
+        for i, att in enumerate(attestations):
+            if att['termId'] == term_id:
                 existing_idx = i
                 break
+        
+        # Create or update attestation
         attestation = {
             'termId': term_id,
-            'subPointIndex': subpoint_idx,
             'agreed': False,
             'overriddenValue': override_value,
             'reason': reason if reason else None
         }
+        
         if existing_idx is not None:
-            store[existing_idx] = attestation
+            attestations[existing_idx] = attestation
         else:
-            store.append(attestation)
-        return store
+            attestations.append(attestation)
+        
+        return attestations
     
-    # Handle Save Override UI state - update only subpoint UI (MATCH pattern)
+    # Handle Save Term Override button - update UI state (MATCH pattern)
     @app.callback(
-        [Output({'type': 'attestation-initial', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style', allow_duplicate=True),
-         Output({'type': 'attestation-editing', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style', allow_duplicate=True),
-         Output({'type': 'attestation-approved', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style', allow_duplicate=True),
-         Output({'type': 'attestation-overridden', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'style', allow_duplicate=True),
-         Output({'type': 'override-status-text', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'children'),
-         Output({'type': 'override-reason-display', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'children')],
-        Input({'type': 'save-override-btn', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'n_clicks'),
-        [State({'type': 'override-dropdown', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'value'),
-         State({'type': 'override-reason-input', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'value')],
+        [Output({'type': 'term-attestation-initial', 'term_id': MATCH}, 'style', allow_duplicate=True),
+         Output({'type': 'term-attestation-editing', 'term_id': MATCH}, 'style', allow_duplicate=True),
+         Output({'type': 'term-attestation-approved', 'term_id': MATCH}, 'style', allow_duplicate=True),
+         Output({'type': 'term-attestation-overridden', 'term_id': MATCH}, 'style', allow_duplicate=True),
+         Output({'type': 'term-override-status-text', 'term_id': MATCH}, 'children'),
+         Output({'type': 'term-override-reason-display', 'term_id': MATCH}, 'children')],
+        [Input({'type': 'save-term-override-btn', 'term_id': MATCH}, 'n_clicks')],
+        [State({'type': 'term-override-dropdown', 'term_id': MATCH}, 'value'),
+         State({'type': 'term-override-reason-input', 'term_id': MATCH}, 'value')],
         prevent_initial_call=True
     )
-    def update_attestation_ui(n_clicks, override_value, reason):
+    def save_term_override_ui(n_clicks, override_value, reason):
+        """Update UI state after saving term override"""
         if not n_clicks:
             raise PreventUpdate
+        
         # Prepare display values - map status to display text
         status_display = {
             'supported': 'Supported',
@@ -522,45 +550,50 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
             'not-supported': 'Not Supported'
         }
         status_text = f"Overridden: {status_display.get(override_value, override_value)}"
-        # Create reason display with bold Reason prefix
-        from dash import html
+        
+        # Create reason display with bold "Reason:" prefix
         if reason:
+            from dash import html
             reason_display = html.Div([
                 html.Span("Reason: ", style={'fontWeight': 500}),
                 reason
             ])
         else:
             reason_display = ""
-        # Show overridden state (hide editing, show overridden)
-        return ({'display': 'none'}, {'display': 'none'},
+        
+        # Show overridden state
+        return ({'display': 'none'}, {'display': 'none'}, 
                 {'display': 'none'}, {'display': 'block'}, status_text, reason_display)
     
-    # Update reason label when dropdown changes
+    # Update term reason label when dropdown changes
     @app.callback(
-        [Output({'type': 'reason-optional-label', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'children'),
-         Output({'type': 'reason-asterisk', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'children')],
-        [Input({'type': 'override-dropdown', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'value')],
-        [State({'type': 'override-dropdown', 'term_id': MATCH, 'subpoint_idx': MATCH}, 'id')],
+        [Output({'type': 'term-reason-optional-label', 'term_id': MATCH}, 'children'),
+         Output({'type': 'term-reason-asterisk', 'term_id': MATCH}, 'children')],
+        [Input({'type': 'term-override-dropdown', 'term_id': MATCH}, 'value')],
+        [State({'type': 'term-override-dropdown', 'term_id': MATCH}, 'id')],
         prevent_initial_call=True
     )
-    def update_reason_label(value, dropdown_id):
-        """Update the reason label when dropdown changes"""
-        from contract_detail_view import COMPLIANCE_TERMS
+    def update_term_reason_label(value, dropdown_id):
+        """Update the term reason label when dropdown changes"""
+        from contract_detail_view import COMPLIANCE_TERMS, get_term_status
         
         term_id = dropdown_id['term_id']
-        subpoint_idx = dropdown_id['subpoint_idx']
         
-        # Helper to convert boolean to status
-        def boolean_to_status(met):
-            return 'supported' if met else 'not-supported'
+        # Helper to convert term status to dropdown value
+        def status_to_value(status):
+            if status == 'met':
+                return 'supported'
+            elif status == 'partially-met':
+                return 'partially-supported'
+            else:
+                return 'not-supported'
         
         # Find the original value
         original_value = None
         for term in COMPLIANCE_TERMS:
             if term['id'] == term_id:
-                if subpoint_idx < len(term['subPoints']):
-                    original_value = boolean_to_status(term['subPoints'][subpoint_idx]['met'])
-                    break
+                original_value = status_to_value(get_term_status(term))
+                break
         
         # Show asterisk if value changed, show "(Optional)" if not changed
         if value == original_value:
@@ -572,19 +605,19 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         
         return optional_label, asterisk
     
-    # Update all subpoint states based on attestation-store
+    # Update all term states based on term-attestation-store
     @app.callback(
-        [Output({'type': 'attestation-initial', 'term_id': ALL, 'subpoint_idx': ALL}, 'style', allow_duplicate=True),
-         Output({'type': 'attestation-approved', 'term_id': ALL, 'subpoint_idx': ALL}, 'style', allow_duplicate=True),
-         Output({'type': 'attestation-overridden', 'term_id': ALL, 'subpoint_idx': ALL}, 'style', allow_duplicate=True),
-         Output({'type': 'override-status-text', 'term_id': ALL, 'subpoint_idx': ALL}, 'children', allow_duplicate=True),
-         Output({'type': 'override-reason-display', 'term_id': ALL, 'subpoint_idx': ALL}, 'children', allow_duplicate=True)],
-        [Input('attestation-store', 'data')],
-        [State({'type': 'attestation-initial', 'term_id': ALL, 'subpoint_idx': ALL}, 'id')],
+        [Output({'type': 'term-attestation-initial', 'term_id': ALL}, 'style', allow_duplicate=True),
+         Output({'type': 'term-attestation-approved', 'term_id': ALL}, 'style', allow_duplicate=True),
+         Output({'type': 'term-attestation-overridden', 'term_id': ALL}, 'style', allow_duplicate=True),
+         Output({'type': 'term-override-status-text', 'term_id': ALL}, 'children', allow_duplicate=True),
+         Output({'type': 'term-override-reason-display', 'term_id': ALL}, 'children', allow_duplicate=True)],
+        [Input('term-attestation-store', 'data')],
+        [State({'type': 'term-attestation-initial', 'term_id': ALL}, 'id')],
         prevent_initial_call=True
     )
-    def update_all_attestation_states(attestations, all_ids):
-        """Update all subpoint attestation states based on the attestation store"""
+    def update_all_term_attestation_states(attestations, all_ids):
+        """Update all term attestation states based on the attestation store"""
         initial_styles = []
         approved_styles = []
         overridden_styles = []
@@ -593,19 +626,18 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         
         for comp_id in all_ids:
             term_id = comp_id['term_id']
-            subpoint_idx = comp_id['subpoint_idx']
             
-            # Find attestation for this subpoint
+            # Find attestation for this term
             attestation = None
             for att in attestations:
-                if att['termId'] == term_id and att['subPointIndex'] == subpoint_idx:
+                if att['termId'] == term_id:
                     attestation = att
                     break
             
             if attestation:
                 if attestation['agreed'] == True:
                     initial_styles.append({'display': 'none'})
-                    approved_styles.append({'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between', 'padding': '8px 12px', 'backgroundColor': '#dcfce7', 'borderRadius': '6px', 'border': '1px solid #bbf7d0'})
+                    approved_styles.append({'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between', 'padding': '10px 14px', 'backgroundColor': '#f0fdf4', 'borderRadius': '6px', 'border': '1px solid #bbf7d0'})
                     overridden_styles.append({'display': 'none'})
                     status_texts.append("")
                     reason_displays.append("")
@@ -613,8 +645,14 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
                     from dash import html
                     initial_styles.append({'display': 'none'})
                     approved_styles.append({'display': 'none'})
-                    overridden_styles.append({'display': 'block', 'padding': '8px 12px', 'backgroundColor': '#fffbeb', 'borderRadius': '6px', 'border': '1px solid #fde68a'})
-                    status_text = f"Overridden: {'Met' if attestation.get('overriddenValue') else 'Not Met'}"
+                    overridden_styles.append({'display': 'block', 'padding': '10px 14px', 'backgroundColor': '#fffbeb', 'borderRadius': '6px', 'border': '1px solid #fde68a'})
+                    
+                    status_display = {
+                        'supported': 'Supported',
+                        'partially-supported': 'Partially Supported',
+                        'not-supported': 'Not Supported'
+                    }
+                    status_text = f"Overridden: {status_display.get(attestation.get('overriddenValue'), attestation.get('overriddenValue'))}"
                     status_texts.append(status_text)
                     
                     # Create reason display with bold "Reason:" prefix
@@ -641,41 +679,45 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         
         return initial_styles, approved_styles, overridden_styles, status_texts, reason_displays
     
-    # Update attestation progress
+    # Update attestation progress (now based on terms instead of subpoints)
     @app.callback(
         [Output('reviewed-count', 'children'),
          Output('progress-percentage', 'children'),
          Output('attestation-progress', 'value'),
          Output('attest-review-btn', 'disabled'),
-         Output('attest-message', 'children')],
-        [Input('attestation-store', 'data')],
+         Output('attest-message', 'children'),
+         Output('attestation-banner-message', 'children')],
+        [Input('term-attestation-store', 'data')],
         prevent_initial_call=True
     )
     def update_attestation_progress(attestations):
         """Update the attestation progress bar and button state"""
         from contract_detail_view import COMPLIANCE_TERMS
         
-        # Calculate total subpoints
-        total_points = sum(len(term['subPoints']) for term in COMPLIANCE_TERMS)
+        # Calculate total terms
+        total_terms = len(COMPLIANCE_TERMS)
         
-        # Count reviewed subpoints
+        # Count reviewed terms
         reviewed_count = len([a for a in attestations if a.get('agreed') is not None])
         
         # Calculate percentage
-        percentage = (reviewed_count / total_points * 100) if total_points > 0 else 0
+        percentage = (reviewed_count / total_terms * 100) if total_terms > 0 else 0
         
         # Determine if can attest
-        can_attest = reviewed_count == total_points
+        can_attest = reviewed_count == total_terms
         
-        message = "Click to attest the review" if can_attest else "Please review all subpoints before attesting"
+        message = "Click to attest the review" if can_attest else "Please review all terms before attesting"
+        banner_message = f" - Please review all {total_terms} compliance terms and attest the review when complete ({reviewed_count} of {total_terms} reviewed)."
         
-        return str(reviewed_count), f"{int(percentage)}%", percentage, not can_attest, message
+        return str(reviewed_count), f"{int(percentage)}%", percentage, not can_attest, message, banner_message
     
     # Handle Attest Review button
     @app.callback(
         [Output('is-attested-store', 'data'),
          Output('attestation-progress-container', 'style'),
-         Output('attested-confirmation', 'style')],
+         Output('attested-confirmation', 'style'),
+         Output('attested-banner', 'style'),
+         Output('unattested-banner', 'style')],
         [Input('attest-review-btn', 'n_clicks')],
         [State('is-attested-store', 'data')],
         prevent_initial_call=True
@@ -686,6 +728,4 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
             raise PreventUpdate
         
         # Set attested state
-        return True, {'display': 'none'}, {'marginTop': '24px', 'display': 'block'}
-
-# --- Dedicated callback for contract detail 'Back to Reviews' button ---
+        return True, {'display': 'none'}, {'marginTop': '24px', 'display': 'block'}, {'display': 'block'}, {'display': 'none'}
