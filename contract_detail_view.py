@@ -796,144 +796,172 @@ def get_contract_detail_layout(contract):
                 # Accordion content (expanded state)
                 dbc.Collapse([
                     html.Div([
-                        # Overall Analysis and Attestation Controls Section
+                        # Overall Analysis with Integrated Attestation
                         html.Div([
-                            # Overall Analysis
-                            html.Div([
-                                dbc.Button([
-                                    html.Div([
-                                        html.Div(style={'width': '4px', 'height': '16px', 'backgroundColor': '#6366f1', 'borderRadius': '9999px', 'marginRight': '8px'}),
-                                        html.Span("Overall Analysis", style={'fontSize': '14px', 'color': '#0f172a'})
-                                    ], style={'display': 'flex', 'alignItems': 'center'}),
-                                    icon("mdi:chevron-down", width=16, color='#64748b')
-                                ],
-                                    id={'type': 'overall-analysis-btn', 'index': term['id']},
-                                    color="light",
-                                    outline=True,
-                                    className="w-100",
-                                    style={'display': 'flex', 'justifyContent': 'space-between', 'alignItems': 'center', 'marginBottom': '12px'}
-                                ),
-                                dbc.Collapse([
-                                    html.Div([
-                                        html.P(term.get('overallAnalysis', ''),
-                                               style={'fontSize': '14px', 'color': '#1e293b', 'lineHeight': '1.6', 'margin': 0})
-                                    ], style={'backgroundColor': '#eef2ff', 'padding': '16px', 'borderRadius': '8px', 'border': '1px solid #c7d2fe'})
-                                ], id={'type': 'overall-analysis-collapse', 'index': term['id']}, is_open=False)
-                            ], style={'marginBottom': '16px'}) if term.get('overallAnalysis') else html.Div(),
-                            
-                            # Term-Level Attestation Controls
-                            html.Div([
-                                # Initial state: Approve and Override buttons
+                            # Collapsible trigger button
+                            dbc.Button([
                                 html.Div([
-                                    dbc.Button([
-                                        icon("mdi:thumb-up", width=14, style={'marginRight': '4px'}),
-                                        "Approve Term"
-                                    ], 
-                                        id={'type': 'approve-term-btn', 'term_id': term['id']},
-                                        outline=True,
-                                        size='sm',
-                                        style={
-                                            'display': 'inline-flex',
-                                            'alignItems': 'center',
-                                            'gap': '4px',
-                                            'color': '#15803d',
-                                            'borderColor': '#86efac',
-                                            'backgroundColor': 'white',
-                                            'fontSize': '12px',
-                                            'padding': '6px 14px'
-                                        }
-                                    ),
-                                    dbc.Button([
-                                        icon("mdi:pencil", width=14, style={'marginRight': '4px'}),
-                                        "Override Term"
-                                    ], 
-                                        id={'type': 'override-term-btn', 'term_id': term['id']},
-                                        outline=True,
-                                        size='sm',
-                                        style={
-                                            'display': 'inline-flex',
-                                            'alignItems': 'center',
-                                            'gap': '4px',
-                                            'color': '#b45309',
-                                            'borderColor': '#fcd34d',
-                                            'backgroundColor': 'white',
-                                            'fontSize': '12px',
-                                            'padding': '6px 14px',
-                                            'marginLeft': '8px'
-                                        }
-                                    )
-                                ], id={'type': 'term-attestation-initial', 'term_id': term['id']}, style={'display': 'flex', 'alignItems': 'center', 'gap': '8px'}),
-                                
-                                # Approved state
+                                    html.Div(style={'width': '4px', 'height': '16px', 'backgroundColor': '#6366f1', 'borderRadius': '9999px', 'marginRight': '8px'}),
+                                    html.Span("Term Analysis & Review", style={'fontSize': '14px', 'fontWeight': 500})
+                                ], style={'display': 'flex', 'alignItems': 'center', 'gap': '8px'}),
+                                icon("mdi:chevron-down", width=16)
+                            ],
+                                id={'type': 'overall-analysis-btn', 'index': term['id']},
+                                color="light",
+                                outline=True,
+                                className="w-100",
+                                style={'display': 'flex', 'justifyContent': 'space-between', 'alignItems': 'center', 'marginBottom': '12px'}
+                            ),
+                            # Collapsible content with analysis and integrated attestation bar
+                            dbc.Collapse([
+                                # Outer border container matching React version
                                 html.Div([
-                                    html.Div([
-                                        icon("mdi:check-circle", width=16, color='#15803d', style={'marginRight': '8px'}),
-                                        html.Span("Term Approved", style={'fontSize': '14px', 'color': '#15803d', 'fontWeight': 500})
-                                    ], style={'display': 'flex', 'alignItems': 'center', 'gap': '8px'}),
-                                    dbc.Button("Change", 
-                                        id={'type': 'change-term-approval-btn', 'term_id': term['id']},
-                                        size='sm',
-                                        color='link',
-                                        style={
-                                            'fontSize': '12px', 
-                                            'color': '#64748b', 
-                                            'padding': '4px 0',
-                                            'height': 'auto',
-                                            'backgroundColor': 'transparent'
-                                        },
-                                        className='hover:bg-transparent'
-                                    )
-                                ], id={'type': 'term-attestation-approved', 'term_id': term['id']}, 
-                                   style={
-                                       'display': 'none', 
-                                       'alignItems': 'center', 
-                                       'justifyContent': 'space-between', 
-                                       'padding': '10px 14px', 
-                                       'backgroundColor': '#f0fdf4', 
-                                       'borderRadius': '6px', 
-                                       'border': '1px solid #bbf7d0'
-                                   }),
-                                
-                                # Overridden state
-                                html.Div([
+                                    # Analysis content section
                                     html.Div([
                                         html.Div([
-                                            icon("mdi:pencil", width=16, color='#b45309', style={'marginRight': '8px'}),
-                                            html.Span(id={'type': 'term-override-status-text', 'term_id': term['id']}, 
-                                                     children="Term Overridden", style={'fontSize': '14px', 'color': '#b45309', 'fontWeight': 500})
-                                        ], style={'display': 'flex', 'alignItems': 'center', 'gap': '8px'}),
-                                        dbc.Button("Edit", 
-                                            id={'type': 'edit-term-override-btn', 'term_id': term['id']},
-                                            size='sm',
-                                            color='link',
-                                            style={
-                                                'fontSize': '12px', 
-                                                'color': '#64748b', 
-                                                'padding': '4px 0',
-                                                'height': 'auto',
-                                                'backgroundColor': 'transparent'
-                                            },
-                                            className='hover:bg-transparent'
-                                        )
-                                    ], style={'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between', 'marginBottom': '8px'}),
-                                    html.Div(id={'type': 'term-override-reason-display', 'term_id': term['id']},
-                                            children="",
-                                            style={
-                                                'fontSize': '12px', 
-                                                'color': '#334155', 
-                                                'backgroundColor': 'white', 
-                                                'padding': '8px 12px', 
-                                                'borderRadius': '4px', 
-                                                'border': '1px solid #fde68a'
+                                            icon("mdi:file-document-outline", width=16, color='#4f46e5', style={'marginRight': '8px', 'marginTop': '2px', 'flexShrink': 0}),
+                                            html.H4("ANALYSIS SUMMARY", style={
+                                                'fontSize': '10px',
+                                                'color': '#312e81',
+                                                'fontWeight': 600,
+                                                'letterSpacing': '0.05em',
+                                                'margin': 0
                                             })
-                                ], id={'type': 'term-attestation-overridden', 'term_id': term['id']}, 
-                                   style={
-                                       'display': 'none', 
-                                       'padding': '10px 14px', 
-                                       'backgroundColor': '#fffbeb', 
-                                       'borderRadius': '6px', 
-                                       'border': '1px solid #fde68a'
-                                   }),
+                                        ], style={'display': 'flex', 'alignItems': 'start', 'gap': '8px', 'marginBottom': '12px'}),
+                                        html.P(term.get('overallAnalysis', ''),
+                                               style={'fontSize': '14px', 'color': '#1e293b', 'lineHeight': '1.6', 'margin': 0})
+                                    ], style={
+                                        'background': 'linear-gradient(to bottom right, #eef2ff, #dbeafe)',
+                                        'padding': '20px'
+                                    }),
+                                    
+                                    # Integrated Attestation Bar
+                                    html.Div([
+                                        html.Div([
+                                            # Status indicator
+                                            html.Div([
+                                                html.Div([
+                                                    html.Div(style={'width': '6px', 'height': '6px', 'borderRadius': '9999px', 'backgroundColor': '#94a3b8'}),
+                                                    html.Span("Review Status", style={'fontSize': '11px', 'fontWeight': 500, 'color': '#64748b'})
+                                                ], style={'display': 'flex', 'alignItems': 'center', 'gap': '8px', 'padding': '6px 12px', 'borderRadius': '6px', 'backgroundColor': '#f1f5f9'}),
+                                                html.Span("Not reviewed yet", style={'fontSize': '11px', 'color': '#64748b', 'marginLeft': '8px'})
+                                            ], style={'display': 'flex', 'alignItems': 'center'}),
+                                            
+                                            # Action buttons - will show different states based on attestation
+                                            html.Div([
+                                                # Initial state: Approve and Override buttons (compact)
+                                                html.Div([
+                                                    dbc.Button([
+                                                        icon("mdi:thumb-up", width=14),
+                                                        html.Span("Approve", style={'fontSize': '11px', 'fontWeight': 500})
+                                                    ], 
+                                                        id={'type': 'approve-term-btn', 'term_id': term['id']},
+                                                        outline=True,
+                                                        size='sm',
+                                                        style={
+                                                            'display': 'inline-flex',
+                                                            'alignItems': 'center',
+                                                            'gap': '6px',
+                                                            'color': '#15803d',
+                                                            'borderColor': '#86efac',
+                                                            'backgroundColor': 'white',
+                                                            'padding': '6px 12px',
+                                                            'height': '32px'
+                                                        },
+                                                        className='hover:bg-green-50'
+                                                    ),
+                                                    dbc.Button([
+                                                        icon("mdi:pencil", width=14),
+                                                        html.Span("Override", style={'fontSize': '11px', 'fontWeight': 500})
+                                                    ], 
+                                                        id={'type': 'override-term-btn', 'term_id': term['id']},
+                                                        outline=True,
+                                                        size='sm',
+                                                        style={
+                                                            'display': 'inline-flex',
+                                                            'alignItems': 'center',
+                                                            'gap': '6px',
+                                                            'color': '#b45309',
+                                                            'borderColor': '#fbbf24',
+                                                            'backgroundColor': 'white',
+                                                            'padding': '6px 12px',
+                                                            'height': '32px',
+                                                            'marginLeft': '8px'
+                                                        },
+                                                        className='hover:bg-amber-50'
+                                                    )
+                                                ], id={'type': 'term-attestation-initial', 'term_id': term['id']}, style={'display': 'flex', 'alignItems': 'center', 'gap': '8px'}),
+                                                
+                                                # Approved state (compact)
+                                                html.Div([
+                                                    icon("mdi:check-circle", width=16, color='#15803d', style={'marginRight': '6px'}),
+                                                    html.Span("Approved", style={'fontSize': '11px', 'color': '#15803d', 'fontWeight': 500}),
+                                                    dbc.Button("Change", 
+                                                        id={'type': 'change-term-approval-btn', 'term_id': term['id']},
+                                                        size='sm',
+                                                        color='link',
+                                                        style={
+                                                            'fontSize': '10px', 
+                                                            'color': '#64748b', 
+                                                            'padding': '4px 8px',
+                                                            'height': 'auto',
+                                                            'backgroundColor': 'transparent',
+                                                            'marginLeft': '8px'
+                                                        }
+                                                    )
+                                                ], id={'type': 'term-attestation-approved', 'term_id': term['id']}, 
+                                                   style={
+                                                       'display': 'none', 
+                                                       'alignItems': 'center', 
+                                                       'padding': '6px 12px', 
+                                                       'backgroundColor': '#f0fdf4', 
+                                                       'borderRadius': '6px', 
+                                                       'border': '1px solid #bbf7d0'
+                                                   }),
+                                
+                                                # Overridden state (compact)
+                                                html.Div([
+                                                    html.Div([
+                                                        html.Div([
+                                                            icon("mdi:pencil", width=16, color='#b45309', style={'marginRight': '6px'}),
+                                                            html.Span(id={'type': 'term-override-status-text', 'term_id': term['id']}, 
+                                                                     children="Overridden: Met", style={'fontSize': '11px', 'color': '#b45309', 'fontWeight': 500})
+                                                        ], style={'display': 'flex', 'alignItems': 'center'}),
+                                                        html.Div(id={'type': 'term-override-reason-display', 'term_id': term['id']},
+                                                                children="",
+                                                                style={
+                                                                    'fontSize': '10px',
+                                                                    'color': '#64748b', 
+                                                                    'marginLeft': '22px',
+                                                                    'marginTop': '4px'
+                                                                })
+                                                    ], style={'flex': '1'}),
+                                                    dbc.Button("Change", 
+                                                        id={'type': 'change-term-override-btn', 'term_id': term['id']},
+                                                        size='sm',
+                                                        color='link',
+                                                        style={
+                                                            'fontSize': '10px', 
+                                                            'color': '#64748b', 
+                                                            'padding': '4px 8px',
+                                                            'height': 'auto',
+                                                            'backgroundColor': 'transparent'
+                                                        }
+                                                    )
+                                                ], id={'type': 'term-attestation-overridden', 'term_id': term['id']}, 
+                                                   style={
+                                                       'display': 'none',
+                                                       'alignItems': 'flex-start',
+                                                       'justifyContent': 'space-between',
+                                                       'padding': '6px 12px', 
+                                                       'backgroundColor': '#fffbeb', 
+                                                       'borderRadius': '6px', 
+                                                       'border': '1px solid #fde68a'
+                                                   }),
+                                            ])
+                                        ])
+                                    ])
+                                ]),
                                 
                                 # Editing/Override form
                                 html.Div([
@@ -943,11 +971,11 @@ def get_contract_detail_layout(contract):
                                         dcc.Dropdown(
                                             id={'type': 'term-override-dropdown', 'term_id': term['id']},
                                             options=[
-                                                {'label': 'Supported', 'value': 'supported'},
-                                                {'label': 'Partially Supported', 'value': 'partially-supported'},
-                                                {'label': 'Not Supported', 'value': 'not-supported'}
+                                                {'label': 'Met', 'value': 'met'},
+                                                {'label': 'Partially Met', 'value': 'partially-met'},
+                                                {'label': 'Missing', 'value': 'missing'}
                                             ],
-                                            value='supported' if status == 'met' else 'partially-supported' if status == 'partially-met' else 'not-supported',
+                                            value='met' if status == 'met' else 'partially-met' if status == 'partially-met' else 'missing',
                                             clearable=False,
                                             style={'fontSize': '14px'}
                                         )
@@ -955,13 +983,8 @@ def get_contract_detail_layout(contract):
                                     # Reason input section
                                     html.Div([
                                         html.Label([
-                                            "Reason ",
-                                            html.Span(id={'type': 'term-reason-asterisk', 'term_id': term['id']},
-                                                     children="",
-                                                     style={'color': '#dc2626'}),
-                                            html.Span(id={'type': 'term-reason-optional-label', 'term_id': term['id']}, 
-                                                     children=" (Optional)",
-                                                     style={'color': '#64748b'})
+                                            "Reason for Override ",
+                                            html.Span("*", style={'color': '#dc2626'})
                                         ], style={'fontSize': '14px', 'color': '#334155', 'marginBottom': '6px', 'display': 'block', 'fontWeight': 500}),
                                         dbc.Textarea(
                                             id={'type': 'term-override-reason-input', 'term_id': term['id']},
@@ -1009,8 +1032,11 @@ def get_contract_detail_layout(contract):
                                        'background': 'linear-gradient(to bottom right, #fffbeb, #ffedd5)', 
                                        'borderRadius': '8px', 
                                        'border': '2px solid #fcd34d'
-                                   })
-                            ], style={'marginBottom': '16px'}),
+                                })
+                            ], style={'borderRadius': '8px', 'border': '1px solid #c7d2fe', 'overflow': 'hidden', 'marginBottom': '16px'},
+                                id={'type': 'overall-analysis-collapse', 'index': term['id']},
+                                is_open=False
+                            )
                         ], style={'paddingBottom': '16px', 'borderBottom': '1px solid #e2e8f0', 'marginBottom': '16px'}),
                         
                         # Subpoints

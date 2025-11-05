@@ -403,7 +403,7 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
          Output({'type': 'term-attestation-editing', 'term_id': MATCH}, 'style')],
         [Input({'type': 'override-term-btn', 'term_id': MATCH}, 'n_clicks'),
          Input({'type': 'change-term-approval-btn', 'term_id': MATCH}, 'n_clicks'),
-         Input({'type': 'edit-term-override-btn', 'term_id': MATCH}, 'n_clicks')],
+         Input({'type': 'change-term-override-btn', 'term_id': MATCH}, 'n_clicks')],
         prevent_initial_call=True
     )
     def show_term_override_form(override_click, change_click, edit_click):
@@ -447,7 +447,7 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         
         return {'display': 'flex'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}
     
-    # Handle Save Term Override button - update term attestation store only (ALL pattern)
+    # Handle Save Term Override button
     @app.callback(
         Output('term-attestation-store', 'data', allow_duplicate=True),
         [Input({'type': 'save-term-override-btn', 'term_id': ALL}, 'n_clicks')],
@@ -457,8 +457,8 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
          State({'type': 'save-term-override-btn', 'term_id': ALL}, 'id')],
         prevent_initial_call=True
     )
-    def update_term_attestation_store(n_clicks_list, override_values, reason_values, attestations, btn_ids):
-        """Save term override decision to term attestation store"""
+    def save_term_override(n_clicks_list, override_values, reasons, attestations, btn_ids):
+        """Save term override decision"""
         from contract_detail_view import COMPLIANCE_TERMS, get_term_status
         
         if not any(n_clicks_list):
@@ -471,26 +471,22 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         
         term_id = triggered_id['term_id']
         
-        # Find the corresponding values
-        override_value = None
-        reason = None
+        # Find the index of the clicked button
+        btn_index = None
         for i, btn_id in enumerate(btn_ids):
             if btn_id['term_id'] == term_id:
-                override_value = override_values[i]
-                reason = reason_values[i]
+                btn_index = i
                 break
         
-        if override_value is None:
+        if btn_index is None:
             raise PreventUpdate
         
-        # Helper to convert term status to dropdown value
+        override_value = override_values[btn_index]
+        reason = reasons[btn_index]
+        
+        # Helper to convert term status to dropdown value (now they match)
         def status_to_value(status):
-            if status == 'met':
-                return 'supported'
-            elif status == 'partially-met':
-                return 'partially-supported'
-            else:
-                return 'not-supported'
+            return status  # Status values now match dropdown values directly
         
         # Find the original value
         original_value = None
@@ -525,85 +521,17 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         
         return attestations
     
-    # Handle Save Term Override button - update UI state (MATCH pattern)
+    # Hide editing form after save
     @app.callback(
-        [Output({'type': 'term-attestation-initial', 'term_id': MATCH}, 'style', allow_duplicate=True),
-         Output({'type': 'term-attestation-editing', 'term_id': MATCH}, 'style', allow_duplicate=True),
-         Output({'type': 'term-attestation-approved', 'term_id': MATCH}, 'style', allow_duplicate=True),
-         Output({'type': 'term-attestation-overridden', 'term_id': MATCH}, 'style', allow_duplicate=True),
-         Output({'type': 'term-override-status-text', 'term_id': MATCH}, 'children'),
-         Output({'type': 'term-override-reason-display', 'term_id': MATCH}, 'children')],
-        [Input({'type': 'save-term-override-btn', 'term_id': MATCH}, 'n_clicks')],
-        [State({'type': 'term-override-dropdown', 'term_id': MATCH}, 'value'),
-         State({'type': 'term-override-reason-input', 'term_id': MATCH}, 'value')],
+        Output({'type': 'term-attestation-editing', 'term_id': ALL}, 'style', allow_duplicate=True),
+        [Input('term-attestation-store', 'data')],
+        [State({'type': 'term-attestation-editing', 'term_id': ALL}, 'id')],
         prevent_initial_call=True
     )
-    def save_term_override_ui(n_clicks, override_value, reason):
-        """Update UI state after saving term override"""
-        if not n_clicks:
-            raise PreventUpdate
-        
-        # Prepare display values - map status to display text
-        status_display = {
-            'supported': 'Supported',
-            'partially-supported': 'Partially Supported',
-            'not-supported': 'Not Supported'
-        }
-        status_text = f"Overridden: {status_display.get(override_value, override_value)}"
-        
-        # Create reason display with bold "Reason:" prefix
-        if reason:
-            from dash import html
-            reason_display = html.Div([
-                html.Span("Reason: ", style={'fontWeight': 500}),
-                reason
-            ])
-        else:
-            reason_display = ""
-        
-        # Show overridden state
-        return ({'display': 'none'}, {'display': 'none'}, 
-                {'display': 'none'}, {'display': 'block'}, status_text, reason_display)
-    
-    # Update term reason label when dropdown changes
-    @app.callback(
-        [Output({'type': 'term-reason-optional-label', 'term_id': MATCH}, 'children'),
-         Output({'type': 'term-reason-asterisk', 'term_id': MATCH}, 'children')],
-        [Input({'type': 'term-override-dropdown', 'term_id': MATCH}, 'value')],
-        [State({'type': 'term-override-dropdown', 'term_id': MATCH}, 'id')],
-        prevent_initial_call=True
-    )
-    def update_term_reason_label(value, dropdown_id):
-        """Update the term reason label when dropdown changes"""
-        from contract_detail_view import COMPLIANCE_TERMS, get_term_status
-        
-        term_id = dropdown_id['term_id']
-        
-        # Helper to convert term status to dropdown value
-        def status_to_value(status):
-            if status == 'met':
-                return 'supported'
-            elif status == 'partially-met':
-                return 'partially-supported'
-            else:
-                return 'not-supported'
-        
-        # Find the original value
-        original_value = None
-        for term in COMPLIANCE_TERMS:
-            if term['id'] == term_id:
-                original_value = status_to_value(get_term_status(term))
-                break
-        
-        # Show asterisk if value changed, show "(Optional)" if not changed
-        if value == original_value:
-            optional_label = " (Optional)"
-            asterisk = ""
-        else:
-            optional_label = ""
-            asterisk = "*"
-        
-        return optional_label, asterisk
+    def hide_editing_forms_after_save(attestations, editing_ids):
+        """Hide all editing forms after any save"""
+        # Return display:none for all editing forms
+        return [{'display': 'none'} for _ in editing_ids]
     
     # Update all term states based on term-attestation-store
     @app.callback(
@@ -637,7 +565,7 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
             if attestation:
                 if attestation['agreed'] == True:
                     initial_styles.append({'display': 'none'})
-                    approved_styles.append({'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between', 'padding': '10px 14px', 'backgroundColor': '#f0fdf4', 'borderRadius': '6px', 'border': '1px solid #bbf7d0'})
+                    approved_styles.append({'display': 'flex', 'alignItems': 'center', 'padding': '6px 12px', 'backgroundColor': '#f0fdf4', 'borderRadius': '6px', 'border': '1px solid #bbf7d0'})
                     overridden_styles.append({'display': 'none'})
                     status_texts.append("")
                     reason_displays.append("")
@@ -645,12 +573,12 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
                     from dash import html
                     initial_styles.append({'display': 'none'})
                     approved_styles.append({'display': 'none'})
-                    overridden_styles.append({'display': 'block', 'padding': '10px 14px', 'backgroundColor': '#fffbeb', 'borderRadius': '6px', 'border': '1px solid #fde68a'})
+                    overridden_styles.append({'display': 'flex', 'alignItems': 'flex-start', 'justifyContent': 'space-between', 'padding': '6px 12px', 'backgroundColor': '#fffbeb', 'borderRadius': '6px', 'border': '1px solid #fde68a'})
                     
                     status_display = {
-                        'supported': 'Supported',
-                        'partially-supported': 'Partially Supported',
-                        'not-supported': 'Not Supported'
+                        'met': 'Met',
+                        'partially-met': 'Partially Met',
+                        'missing': 'Missing'
                     }
                     status_text = f"Overridden: {status_display.get(attestation.get('overriddenValue'), attestation.get('overriddenValue'))}"
                     status_texts.append(status_text)

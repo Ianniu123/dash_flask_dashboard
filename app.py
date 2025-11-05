@@ -373,6 +373,9 @@ app.layout = dbc.Container(
         dcc.Store(id='sidebar-collapsed', data=False),
         dcc.Store(id='request-review-collapsed', data=True),
         
+        # Hidden button for callback compatibility (shown in contract detail view)
+        dbc.Button(id='back-to-reviews-btn', style={'display': 'none'}, n_clicks=0),
+        
         # Sidebar
         html.Div(
             id='sidebar-container',
@@ -419,10 +422,7 @@ app.layout = dbc.Container(
                     }
                 )
             ]
-        ),
-        
-        # Hidden button for callback registration (back-to-reviews-btn only exists in contract detail view)
-        html.Button(id='back-to-reviews-btn', style={'display': 'none'})
+        )
     ]
 )
 
