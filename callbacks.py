@@ -657,3 +657,256 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         
         # Set attested state
         return True, {'display': 'none'}, {'marginTop': '24px', 'display': 'block'}, {'display': 'block'}, {'display': 'none'}
+
+    # Handle column header clicks for sorting
+    @app.callback(
+        [Output('reviews-sort-column', 'data'),
+         Output('reviews-sort-direction', 'data')],
+        [Input({'type': 'sort-header', 'column': ALL}, 'n_clicks')],
+        [State('reviews-sort-column', 'data'),
+         State('reviews-sort-direction', 'data'),
+         State({'type': 'sort-header', 'column': ALL}, 'id')],
+        prevent_initial_call=True
+    )
+    def handle_sort_click(n_clicks, current_column, current_direction, header_ids):
+        """Handle sorting when column headers are clicked"""
+        if not any(n_clicks):
+            raise PreventUpdate
+        
+        # Find which header was clicked
+        triggered = ctx.triggered_id
+        if not triggered:
+            raise PreventUpdate
+        
+        clicked_column = triggered['column']
+        
+        # If same column, toggle direction; otherwise, default to ascending
+        if clicked_column == current_column:
+            new_direction = 'desc' if current_direction == 'asc' else 'asc'
+        else:
+            new_direction = 'asc'
+        
+        return clicked_column, new_direction
+    
+    # Update table header icons based on sort state
+    @app.callback(
+        Output('reviews-table-header', 'children'),
+        [Input('reviews-sort-column', 'data'),
+         Input('reviews-sort-direction', 'data')],
+        prevent_initial_call=False
+    )
+    def update_table_headers(sort_column, sort_direction):
+        """Update table headers with sort indicators"""
+        from completed_reviews_view import get_sortable_header
+        from dash import html
+        
+        return [
+            get_sortable_header("Contract Name", "name", sort_column, sort_direction),
+            get_sortable_header("Vendor", "vendor", sort_column, sort_direction),
+            get_sortable_header("Review Date", "reviewDate", sort_column, sort_direction),
+            get_sortable_header("Terms Matching", "termMatchingRate", sort_column, sort_direction),
+            get_sortable_header("Points Matching", "pointsMatchingRate", sort_column, sort_direction),
+            get_sortable_header("Jira ID", "jiraId", sort_column, sort_direction),
+            get_sortable_header("Athena ID", "athenaId", sort_column, sort_direction),
+            get_sortable_header("Reviewer", "reviewer", sort_column, sort_direction),
+            html.Th("Actions", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0', 'textAlign': 'right'})
+        ]
+    
+    # Update table body with sorted and filtered data
+    @app.callback(
+        [Output('reviews-table-body', 'children'),
+         Output('reviews-count-display', 'children'),
+         Output('reviews-pagination', 'max_value')],
+        [Input('reviews-sort-column', 'data'),
+         Input('reviews-sort-direction', 'data'),
+         Input('reviews-pagination', 'active_page'),
+         Input('reviews-search', 'value'),
+         Input('reviews-performance-filter', 'value'),
+         Input('reviews-start-date', 'date'),
+         Input('reviews-end-date', 'date')],
+        prevent_initial_call=False
+    )
+    def update_reviews_table(sort_column, sort_direction, current_page, search_query, 
+                            performance_filter, start_date, end_date):
+        """Update the reviews table with sorted and filtered data"""
+        from completed_reviews_view import get_matching_rate_badge, icon
+        from dash import html
+        import dash_bootstrap_components as dbc
+        from datetime import datetime
+        import math
+        
+        # Start with all contracts
+        filtered_contracts = list(MOCK_CONTRACTS)
+        
+        # Apply search filter
+        if search_query:
+            search_lower = search_query.lower()
+            filtered_contracts = [
+                c for c in filtered_contracts
+                if search_lower in c['name'].lower() or
+                   search_lower in c['vendor'].lower() or
+                   search_lower in c['reviewer'].lower() or
+                   search_lower in c['jiraEngagementId'].lower() or
+                   search_lower in c['athenaId'].lower()
+            ]
+        
+        # Apply performance filter
+        if performance_filter and performance_filter != 'all':
+            def matches_performance(contract):
+                avg_rate = (contract['termMatchingRate'] + contract['pointsMatchingRate']) / 2
+                if performance_filter == 'excellent':
+                    return avg_rate >= 90
+                elif performance_filter == 'good':
+                    return avg_rate >= 70 and avg_rate < 90
+                elif performance_filter == 'fair':
+                    return avg_rate >= 50 and avg_rate < 70
+                elif performance_filter == 'poor':
+                    return avg_rate < 50
+                return True
+            
+            filtered_contracts = [c for c in filtered_contracts if matches_performance(c)]
+        
+        # Apply date range filter
+        if start_date or end_date:
+            def parse_date(date_str):
+                """Parse date string like 'Oct 8, 2025' to datetime"""
+                try:
+                    return datetime.strptime(date_str, '%b %d, %Y')
+                except:
+                    return None
+            
+            start_dt = datetime.fromisoformat(start_date) if start_date else None
+            end_dt = datetime.fromisoformat(end_date) if end_date else None
+            
+            filtered_contracts = [
+                c for c in filtered_contracts
+                if (not start_dt or parse_date(c['reviewDate']) >= start_dt) and
+                   (not end_dt or parse_date(c['reviewDate']) <= end_dt)
+            ]
+        
+        # Sort the contracts
+        def get_sort_key(contract):
+            if sort_column == 'name':
+                return contract['name'].lower()
+            elif sort_column == 'vendor':
+                return contract['vendor'].lower()
+            elif sort_column == 'reviewDate':
+                # Parse date for proper sorting
+                try:
+                    return datetime.strptime(contract['reviewDate'], '%b %d, %Y')
+                except:
+                    return datetime.min
+            elif sort_column == 'termMatchingRate':
+                return contract['termMatchingRate']
+            elif sort_column == 'pointsMatchingRate':
+                return contract['pointsMatchingRate']
+            elif sort_column == 'jiraId':
+                return contract['jiraEngagementId'].split('/')[-1].lower()
+            elif sort_column == 'athenaId':
+                return contract['athenaId'].split('/')[-1].lower()
+            elif sort_column == 'reviewer':
+                return contract['reviewer'].lower()
+            return ''
+        
+        filtered_contracts.sort(key=get_sort_key, reverse=(sort_direction == 'desc'))
+        
+        # Pagination
+        items_per_page = 5
+        total_pages = math.ceil(len(filtered_contracts) / items_per_page) if len(filtered_contracts) > 0 else 1
+        start_index = (current_page - 1) * items_per_page
+        end_index = start_index + items_per_page
+        paginated_contracts = filtered_contracts[start_index:end_index]
+        
+        # Build table rows
+        table_rows = []
+        for contract in paginated_contracts:
+            jira_id = contract['jiraEngagementId'].split('/')[-1]
+            athena_id = contract['athenaId'].split('/')[-1]
+            
+            table_rows.append(
+                html.Tr([
+                    html.Td(contract['name'], style={'padding': '12px', 'color': '#0f172a'}),
+                    html.Td(contract['vendor'], style={'padding': '12px', 'color': '#0f172a'}),
+                    html.Td(contract['reviewDate'], style={'padding': '12px', 'color': '#475569'}),
+                    html.Td(get_matching_rate_badge(contract['termMatchingRate']), style={'padding': '12px'}),
+                    html.Td(get_matching_rate_badge(contract['pointsMatchingRate']), style={'padding': '12px'}),
+                    html.Td([
+                        html.A([
+                            html.Span(jira_id, style={'marginRight': '4px'}),
+                            icon("mdi:open-in-new", width=12)
+                        ], href=contract['jiraEngagementId'], target='_blank',
+                           style={'color': '#2563eb', 'textDecoration': 'none', 'fontSize': '14px',
+                                  'display': 'flex', 'alignItems': 'center'})
+                    ], style={'padding': '12px'}),
+                    html.Td([
+                        html.A([
+                            html.Span(athena_id, style={'marginRight': '4px'}),
+                            icon("mdi:open-in-new", width=12)
+                        ], href=contract['athenaId'], target='_blank',
+                           style={'color': '#2563eb', 'textDecoration': 'none', 'fontSize': '14px',
+                                  'display': 'flex', 'alignItems': 'center'})
+                    ], style={'padding': '12px'}),
+                    html.Td(contract['reviewer'], style={'padding': '12px', 'color': '#475569'}),
+                    html.Td([
+                        html.Div([
+                            dbc.Button(
+                                icon("mdi:eye", width=16),
+                                id={'type': 'view-contract-btn', 'index': contract['id']},
+                                color="link",
+                                size="sm",
+                                style={'padding': '4px 8px'}
+                            ),
+                            dbc.Button(
+                                icon("mdi:download", width=16),
+                                color="link",
+                                size="sm",
+                                style={'padding': '4px 8px'}
+                            )
+                        ], style={'display': 'flex', 'gap': '8px', 'justifyContent': 'flex-end'})
+                    ], style={'padding': '12px', 'textAlign': 'right'})
+                ], style={'borderBottom': '1px solid #e2e8f0'}, className='table-row-hover')
+            )
+        
+        # If no results
+        if not table_rows:
+            table_rows = [
+                html.Tr([
+                    html.Td("No contracts found matching your filters",
+                           colSpan=9,
+                           style={'padding': '24px', 'textAlign': 'center', 'color': '#64748b'})
+                ])
+            ]
+        
+        # Update count display
+        if len(filtered_contracts) > 0:
+            count_text = f"Showing {start_index + 1}-{min(end_index, len(filtered_contracts))} of {len(filtered_contracts)}"
+        else:
+            count_text = "Showing 0 of 0"
+        
+        return table_rows, count_text, total_pages
+    
+    # Reset pagination when filters change
+    @app.callback(
+        Output('reviews-pagination', 'active_page'),
+        [Input('reviews-search', 'value'),
+         Input('reviews-performance-filter', 'value'),
+         Input('reviews-start-date', 'date'),
+         Input('reviews-end-date', 'date')],
+        prevent_initial_call=True
+    )
+    def reset_pagination_on_filter(search, performance, start_date, end_date):
+        """Reset to page 1 when filters change"""
+        return 1
+    
+    # Clear date filters
+    @app.callback(
+        [Output('reviews-start-date', 'date'),
+         Output('reviews-end-date', 'date')],
+        [Input('reviews-clear-dates', 'n_clicks')],
+        prevent_initial_call=True
+    )
+    def clear_date_filters(n_clicks):
+        """Clear date range filters"""
+        if not n_clicks:
+            raise PreventUpdate
+        return None, None

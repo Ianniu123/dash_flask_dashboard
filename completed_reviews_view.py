@@ -38,6 +38,40 @@ def get_matching_rate_badge(rate):
         }
     )
 
+def get_sortable_header(label, column_id, current_sort_column=None, current_sort_direction='asc'):
+    """Create a sortable table header"""
+    is_sorted = current_sort_column == column_id
+    
+    # Determine which icon to show
+    if is_sorted:
+        if current_sort_direction == 'asc':
+            sort_icon = icon("mdi:arrow-up", width=14, style={'marginLeft': '4px'})
+        else:
+            sort_icon = icon("mdi:arrow-down", width=14, style={'marginLeft': '4px'})
+    else:
+        sort_icon = icon("mdi:unfold-more-horizontal", width=14, 
+                        style={'marginLeft': '4px', 'opacity': 0.3})
+    
+    return html.Th([
+        html.Div([
+            label,
+            sort_icon
+        ], style={
+            'display': 'flex',
+            'alignItems': 'center',
+            'cursor': 'pointer',
+            'userSelect': 'none'
+        })
+    ], 
+    id={'type': 'sort-header', 'column': column_id},
+    style={
+        'padding': '12px',
+        'fontSize': '14px',
+        'fontWeight': 500,
+        'color': '#64748b',
+        'borderBottom': '2px solid #e2e8f0'
+    })
+
 def get_completed_reviews_layout(contracts):
     """Get the completed reviews table layout"""
     
@@ -161,27 +195,32 @@ def get_completed_reviews_layout(contracts):
                 ], md=6),
                 dbc.Col([
                     html.P(f"Showing 1-{min(items_per_page, len(contracts))} of {len(contracts)}",
+                           id='reviews-count-display',
                            style={'fontSize': '14px', 'color': '#64748b', 'margin': 0, 'textAlign': 'right'})
                 ], md=3)
             ])
         ], style={'backgroundColor': 'white', 'borderBottom': '1px solid #e2e8f0'}),
         
         dbc.CardBody([
+            # Hidden stores for sort state
+            dcc.Store(id='reviews-sort-column', data='reviewDate'),
+            dcc.Store(id='reviews-sort-direction', data='desc'),
+            
             # Table
             html.Div([
                 html.Table([
                     html.Thead([
                         html.Tr([
-                            html.Th("Contract Name", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'}),
-                            html.Th("Vendor", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'}),
-                            html.Th("Review Date", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'}),
-                            html.Th("Terms Matching", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'}),
-                            html.Th("Points Matching", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'}),
-                            html.Th("Jira ID", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'}),
-                            html.Th("Athena ID", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'}),
-                            html.Th("Reviewer", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0'}),
+                            get_sortable_header("Contract Name", "name"),
+                            get_sortable_header("Vendor", "vendor"),
+                            get_sortable_header("Review Date", "reviewDate"),
+                            get_sortable_header("Terms Matching", "termMatchingRate"),
+                            get_sortable_header("Points Matching", "pointsMatchingRate"),
+                            get_sortable_header("Jira ID", "jiraId"),
+                            get_sortable_header("Athena ID", "athenaId"),
+                            get_sortable_header("Reviewer", "reviewer"),
                             html.Th("Actions", style={'padding': '12px', 'fontSize': '14px', 'fontWeight': 500, 'color': '#64748b', 'borderBottom': '2px solid #e2e8f0', 'textAlign': 'right'})
-                        ])
+                        ], id='reviews-table-header')
                     ]),
                     html.Tbody(table_rows, id='reviews-table-body')
                 ], style={'width': '100%', 'borderCollapse': 'collapse', 'fontSize': '14px'})
