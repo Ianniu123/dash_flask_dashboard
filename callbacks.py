@@ -910,3 +910,255 @@ def register_callbacks(app, MOCK_CONTRACTS, COLORS, REVIEW_REQUEST_ITEMS):
         if not n_clicks:
             raise PreventUpdate
         return None, None
+    
+    # Update term status breakdown lists with review indicators
+    @app.callback(
+        [Output('collapse-met', 'children'),
+         Output('collapse-partial', 'children'),
+         Output('collapse-missing', 'children')],
+        [Input('term-attestation-store', 'data')],
+        prevent_initial_call=False
+    )
+    def update_term_status_lists(attestations):
+        """Update term status breakdown lists with review indicators"""
+        from contract_detail_view import COMPLIANCE_TERMS, get_term_status
+        from dash import html
+        import dash_bootstrap_components as dbc
+        
+        # Helper to create badge for review status
+        def review_badge(term_id, attestations):
+            attested = any(att.get('termId') == term_id and att.get('agreed') is not None 
+                          for att in attestations)
+            if attested:
+                return html.Span('Reviewed', style={
+                    'fontSize': '11px',
+                    'padding': '2px 6px',
+                    'borderRadius': '4px',
+                    'backgroundColor': '#dbeafe',
+                    'color': '#1e40af',
+                    'border': '1px solid #93c5fd',
+                    'marginLeft': 'auto',
+                    'flexShrink': 0
+                })
+            else:
+                return html.Span('Pending', style={
+                    'fontSize': '11px',
+                    'padding': '2px 6px',
+                    'borderRadius': '4px',
+                    'backgroundColor': '#f1f5f9',
+                    'color': '#64748b',
+                    'border': '1px solid #cbd5e1',
+                    'marginLeft': 'auto',
+                    'flexShrink': 0
+                })
+        
+        # Met terms list
+        met_terms = [term for term in COMPLIANCE_TERMS if get_term_status(term) == "met"]
+        met_list = html.Div([
+            html.Ul([
+                html.Li([
+                    html.Div([
+                        html.Span("✓", style={'color': '#16a34a', 'marginRight': '8px', 'fontSize': '14px'}),
+                        html.Span(term['heading'], style={'fontSize': '13px', 'color': '#334155', 'flex': 1})
+                    ], style={'display': 'flex', 'alignItems': 'start', 'flex': 1}),
+                    review_badge(term['id'], attestations)
+                ], style={'marginBottom': '8px', 'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between', 'gap': '8px'})
+                for term in met_terms
+            ] if len(met_terms) > 0 else [
+                html.Li("None", style={'fontSize': '13px', 'color': '#94a3b8', 'fontStyle': 'italic'})
+            ], style={'listStyle': 'none', 'padding': 0, 'margin': 0})
+        ], className='term-list-container', style={
+            'border': '1px solid #e2e8f0',
+            'borderRadius': '6px',
+            'padding': '12px',
+            'backgroundColor': '#f8fafc',
+            'maxHeight': '240px',
+            'overflowY': 'auto',
+            'marginTop': '8px'
+        })
+        
+        # Partially met and missing terms list (combined in collapse-partial)
+        partial_terms = [term for term in COMPLIANCE_TERMS if get_term_status(term) == "partially-met"]
+        missing_terms = [term for term in COMPLIANCE_TERMS if get_term_status(term) == "missing"]
+        
+        partial_list = html.Div([
+            html.Ul([
+                html.Li([
+                    html.Div([
+                        html.Span("◐", style={'color': '#eab308', 'marginRight': '8px', 'fontSize': '14px'}),
+                        html.Span(term['heading'], style={'fontSize': '13px', 'color': '#334155', 'flex': 1})
+                    ], style={'display': 'flex', 'alignItems': 'start', 'flex': 1}),
+                    review_badge(term['id'], attestations)
+                ], style={'marginBottom': '8px', 'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between', 'gap': '8px'})
+                for term in partial_terms
+            ] if len(partial_terms) > 0 else [
+                html.Li("None", style={'fontSize': '13px', 'color': '#94a3b8', 'fontStyle': 'italic'})
+            ], style={'listStyle': 'none', 'padding': 0, 'margin': 0})
+        ], className='term-list-container', style={
+            'border': '1px solid #e2e8f0',
+            'borderRadius': '6px',
+            'padding': '12px',
+            'backgroundColor': '#f8fafc',
+            'maxHeight': '240px',
+            'overflowY': 'auto',
+            'marginTop': '8px'
+        })
+        
+        # Missing terms list (combined content)
+        combined_list_content = []
+        
+        # Add Partially Met section if any
+        if len(partial_terms) > 0:
+            combined_list_content.append(
+                html.Div([
+                    html.Div([
+                        html.Span("◐", style={'color': '#eab308', 'marginRight': '6px', 'fontSize': '12px'}),
+                        html.Span("Partially Met", style={'fontSize': '12px', 'color': '#92400e', 'fontWeight': 500, 'textTransform': 'uppercase', 'letterSpacing': '0.05em'})
+                    ], style={'display': 'flex', 'alignItems': 'center', 'marginBottom': '8px', 'paddingBottom': '8px', 'borderBottom': '1px solid #fde68a'}),
+                    html.Ul([
+                        html.Li([
+                            html.Div([
+                                html.Span("◐", style={'color': '#eab308', 'marginRight': '8px', 'fontSize': '14px'}),
+                                html.Span(term['heading'], style={'fontSize': '13px', 'color': '#334155', 'flex': 1})
+                            ], style={'display': 'flex', 'alignItems': 'start', 'flex': 1}),
+                            review_badge(term['id'], attestations)
+                        ], style={'marginBottom': '8px', 'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between', 'gap': '8px'})
+                        for term in partial_terms
+                    ], style={'listStyle': 'none', 'padding': 0, 'margin': '0 0 16px 0'})
+                ])
+            )
+        
+        # Add Not Met section
+        combined_list_content.append(
+            html.Div([
+                html.Div([
+                    html.Span("✗", style={'color': '#dc2626', 'marginRight': '6px', 'fontSize': '12px'}),
+                    html.Span("Not Met", style={'fontSize': '12px', 'color': '#991b1b', 'fontWeight': 500, 'textTransform': 'uppercase', 'letterSpacing': '0.05em'})
+                ], style={'display': 'flex', 'alignItems': 'center', 'marginBottom': '8px', 'paddingBottom': '8px', 'borderBottom': '1px solid #fecaca'}),
+                html.Ul([
+                    html.Li([
+                        html.Div([
+                            html.Span("✗", style={'color': '#dc2626', 'marginRight': '8px', 'fontSize': '14px'}),
+                            html.Span(term['heading'], style={'fontSize': '13px', 'color': '#334155', 'flex': 1})
+                        ], style={'display': 'flex', 'alignItems': 'start', 'flex': 1}),
+                        review_badge(term['id'], attestations)
+                    ], style={'marginBottom': '8px', 'display': 'flex', 'alignItems': 'center', 'justifyContent': 'space-between', 'gap': '8px'})
+                    for term in missing_terms
+                ] if len(missing_terms) > 0 else [
+                    html.Li("None", style={'fontSize': '13px', 'color': '#94a3b8', 'fontStyle': 'italic'})
+                ], style={'listStyle': 'none', 'padding': 0, 'margin': 0})
+            ])
+        )
+        
+        missing_list = html.Div(
+            combined_list_content,
+            className='term-list-container',
+            style={
+                'border': '1px solid #e2e8f0',
+                'borderRadius': '6px',
+                'padding': '12px',
+                'backgroundColor': '#f8fafc',
+                'maxHeight': '240px',
+                'overflowY': 'auto',
+                'marginTop': '8px'
+            }
+        )
+        
+        return met_list, partial_list, missing_list
+    
+    # Handle export results button - Download component will handle the actual download
+    @app.callback(
+        [Output('download-results', 'data'),
+         Output('export-results-toast', 'is_open')],
+        [Input('export-results-btn', 'n_clicks')],
+        [State('selected-contract', 'data'),
+         State('term-attestation-store', 'data'),
+         State('is-attested-store', 'data')],
+        prevent_initial_call=True
+    )
+    def export_results(n_clicks, contract, attestations, is_attested):
+        """Export contract review results to JSON file"""
+        import json
+        from datetime import datetime
+        from contract_detail_view import COMPLIANCE_TERMS, get_term_status
+        import dash
+        
+        if not n_clicks or not contract:
+            raise PreventUpdate
+        
+        # Build export data
+        total_terms = len(COMPLIANCE_TERMS)
+        met_terms = len([t for t in COMPLIANCE_TERMS if get_term_status(t) == "met"])
+        partial_terms = len([t for t in COMPLIANCE_TERMS if get_term_status(t) == "partially-met"])
+        missing_terms = len([t for t in COMPLIANCE_TERMS if get_term_status(t) == "missing"])
+        
+        total_points = sum(len(t['subPoints']) for t in COMPLIANCE_TERMS)
+        met_points = sum(len([sp for sp in t['subPoints'] if sp['met']]) for t in COMPLIANCE_TERMS)
+        
+        export_data = {
+            'contractInfo': {
+                'id': contract['id'],
+                'name': contract['name'],
+                'vendor': contract['vendor'],
+                'reviewDate': contract['reviewDate'],
+                'reviewer': contract['reviewer'],
+                'status': contract['status'],
+                'riskLevel': contract['riskLevel'],
+                'jiraEngagementId': contract['jiraEngagementId'],
+                'athenaId': contract['athenaId'],
+                'termMatchingRate': contract['termMatchingRate'],
+                'pointsMatchingRate': contract['pointsMatchingRate']
+            },
+            'complianceMetrics': {
+                'totalTerms': total_terms,
+                'metTerms': met_terms,
+                'partiallyMetTerms': partial_terms,
+                'missingTerms': missing_terms,
+                'termsCompliancePercentage': round((met_terms / total_terms) * 100) if total_terms > 0 else 0,
+                'totalPoints': total_points,
+                'metPoints': met_points,
+                'pointsCompliancePercentage': round((met_points / total_points) * 100) if total_points > 0 else 0
+            },
+            'reviewStatus': {
+                'isAttested': is_attested,
+                'totalTermsReviewed': len(attestations),
+                'reviewedTerms': [
+                    {
+                        'termId': att['termId'],
+                        'termName': next((t['heading'] for t in COMPLIANCE_TERMS if t['id'] == att['termId']), 'Unknown'),
+                        'originalStatus': next((get_term_status(t) for t in COMPLIANCE_TERMS if t['id'] == att['termId']), 'unknown'),
+                        'approved': att.get('agreed', False),
+                        **({'overriddenStatus': att['overriddenValue'], 'overrideReason': att.get('reason')} if att.get('overriddenValue') else {})
+                    }
+                    for att in attestations
+                ]
+            },
+            'complianceTermsDetails': [
+                {
+                    'id': term['id'],
+                    'heading': term['heading'],
+                    'description': term['description'],
+                    'overallAnalysis': term.get('overallAnalysis', ''),
+                    'status': get_term_status(term),
+                    'subPoints': [
+                        {
+                            'heading': sp['heading'],
+                            'description': sp['description'],
+                            'met': sp['met'],
+                            'analysis': sp.get('analysis', ''),
+                            'evidenceCount': len(sp.get('evidence', []))
+                        }
+                        for sp in term['subPoints']
+                    ]
+                }
+                for term in COMPLIANCE_TERMS
+            ],
+            'exportDate': datetime.now().isoformat(),
+            'exportedBy': contract['reviewer']
+        }
+        
+        # Generate filename
+        filename = f"contract-review-{contract['id']}-{datetime.now().strftime('%Y-%m-%d')}.json"
+        
+        # Return download data
+        return dash.dcc.send_string(json.dumps(export_data, indent=2), filename), True

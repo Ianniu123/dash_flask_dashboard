@@ -376,6 +376,21 @@ app.layout = dbc.Container(
         # Hidden button for callback compatibility (shown in contract detail view)
         dbc.Button(id='back-to-reviews-btn', style={'display': 'none'}, n_clicks=0),
         
+        # Download component for export functionality
+        dcc.Download(id='download-results'),
+        
+        # Toast for export success notification
+        dbc.Toast(
+            "Results exported successfully!",
+            id="export-results-toast",
+            header="Export Complete",
+            is_open=False,
+            dismissable=True,
+            icon="success",
+            duration=3000,
+            style={"position": "fixed", "top": 66, "right": 10, "width": 350, "zIndex": 9999}
+        ),
+        
         # Sidebar
         html.Div(
             id='sidebar-container',
